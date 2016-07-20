@@ -1,0 +1,34 @@
+{
+  "name": "ack-path",
+  "version": "1.0.0",
+  "description": "Operating system directory functionality",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha ./test/cases --recursive",
+    "test:watch": "mocha ./test/cases --recursive --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AckerApple/ack-path.git"
+  },
+  "keywords": [
+    "folders",
+    "path"
+  ],
+  "author": "Acker Apple",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AckerApple/ack-path/issues"
+  },
+  "homepage": "https://github.com/AckerApple/ack-path#readme",
+  "dependencies": {
+    "ack-x": "^1.2.9",
+    "mime": "^1.3.4",
+    "mkdirp": "^0.5.1",
+    "readdir": "0.0.13",
+    "rimraf": "^2.5.3"
+  },
+  "devDependencies": {
+    "mocha": "^2.5.3"
+  }
+}
