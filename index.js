@@ -15,6 +15,10 @@ var Path = function(path){
   return this
 }
 
+Path.prototype.writeFile = function(output){
+  return this.File().write(output)
+}
+
 /** performs .join but original object remains untouched */
 Path.prototype.Join = function(pathTo){
   pathTo = pathTo ? path.join(this.path,pathTo) : this.path

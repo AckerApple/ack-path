@@ -5,6 +5,9 @@ Operating system directory functionality
 ```
 var path = require('ack-path')
 
+//write file promise
+path(__dirname).join('file-name.js').writeFile(string).then().catch()
+
 //created directory if not existant
 path(__dirname).paramDir().then()
 
