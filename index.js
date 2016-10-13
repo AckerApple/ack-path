@@ -433,7 +433,7 @@ PathSync.prototype.exists = function(pathOf){
 }
 
 PathSync.prototype.getSubDirNameArray = function(callback){
-  return readDir.readSync(this.path, ['*/'], readDir.INCLUDE_DIRECTORIES + READDIR.NON_RECURSIVE)
+  return readDir.readSync(this.path, ['*/'], readDir.INCLUDE_DIRECTORIES + readDir.NON_RECURSIVE)
 }
 
 
