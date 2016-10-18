@@ -4,41 +4,54 @@ Operating system directory functionality
 ## System Directory Functionality
 ```
 var path = require('ack-path')
+var Path = path(__dirname)
 
 //write file promise
-path(__dirname).join('file-name.js').writeFile(string).then().catch()
+Path.join('file-name.js').writeFile(string).then().catch()
 
 //created directory if not existant
-path(__dirname).paramDir().then()
+Path.paramDir().then()
 
 //string manipulation
-path(__dirname).join('a','b','c.js').path// = __dirname/a/b/c.js
-
-//string manipulation
-path('/test/file.js').removeExt().path// = /test/file
-
-//string manipulation
-path('/test/file').removeExt().path// = /test/file
-
-//string manipulation
-path('/test/file.js').removeFile().path// = /test/
-
-//string manipulation
-path('/test/').removeFile().path// = /test/
+Path.join('a','b','c.js').path// = __dirname/a/b/c.js
 
 //path delete promise
-path(__dirname).delete().then()
+Path.delete().then()
 
-path(__dirname).sync().exists()//NONASYNC
+var PathTest = path('/test/file.js')
+
+//string manipulation
+PathTest.removeExt().path == /test/file
+
+//string manipulation
+PathTest.removeExt().path == /test/file
+
+//string manipulation
+PathTest.removeFile().path == /test/
+
+//string manipulation
+PathTest.removeFile().path == /test/
+```
+
+## NONASYNC Examples
+```
+var PathSync = path(__dirname).sync()
+
+PathSync.exists()
+
+PathSync.delete()
+
+PathSync.copyTo()
 ```
 
 ## System File Functionality
 ```
 var path = require('ack-path')
+var Path = path(__dirname).file('file-name.js')
 
-path(__dirname).file('file-name.js').delete().then()
-path(__dirname).file('file-name.js').getMimeType()//Ex: application/javascript
-path(__dirname).file('file-name.js').stat().then(stats=>stats.size)
-path(__dirname).file('file-name.js').write(string).then()
-path(__dirname).file('file-name.js').append(string).then()
+Path.delete().then()
+Path.getMimeType()//Ex: application/javascript
+Path.stat().then(stats=>stats.size)
+Path.write(string).then()
+Path.append(string).then()
 ```
