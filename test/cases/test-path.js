@@ -8,7 +8,11 @@ describe('ack.path',function(){
 			tarDir = path.join(__dirname,'../../')
 			assestsPath = path.join(__dirname,'../assets')+path.sep
 			mockPath = assestsPath+'MockFolder'
-			mockPathArray = ['SomeFile.js','SomeFolder'+path.sep,'SomeFolder'+path.sep+'SomeFolderFile.js']
+			mockPathArray = [
+				'SomeFile.js',
+				'SomeFolder'+path.sep,
+				'SomeFolder'+path.sep+'SomeFolderFile.js'
+			]
 			mockPathNameArray = ['SomeFile.js','SomeFolder','SomeFolderFile.js']
 		}
 
@@ -29,7 +33,8 @@ describe('ack.path',function(){
 			ack.path(mockPath)
 			.each(function(name,i){
 				assert.equal(name,mockPathArray[i],'path name check')
-			},{NON_RECURSIVE:false},function(){done()})
+			},{NON_RECURSIVE:false, excludeByName:name=>name=='.DS_STORE'})
+			.then(done).catch(done)
 		})
 
 		it('break-test',function(done){
@@ -56,15 +61,12 @@ describe('ack.path',function(){
 	})
 
 	it('#eachPath',function(done){
-		var ops = {NON_RECURSIVE:false}
+		var ops = {NON_RECURSIVE:false, excludeByName:name=>name=='.DS_STORE'}
 		var repeater = function(Path,i){
-			assert.equal(Path.getName(),mockPathNameArray[i],'Path.name check')
-		}
-		var closer = function(){
-			done()
+			assert.equal(Path.getName(), mockPathNameArray[i],'Path.name check, expected '+Path.getName()+' but '+i+' got '+mockPathNameArray[i])
 		}
 
-		ack.path(mockPath).eachPath(repeater,ops,closer).catch(done)
+		ack.path(mockPath).eachPath(repeater,ops).then(done).catch(done)
 	})
 
 	it('#recurRequirePath',function(done){
@@ -144,5 +146,47 @@ describe('ack.path',function(){
 			assert.equal(Path.sync().exists(),false,'path was not succesfully deleted')
 		})
 		.then(done).catch(done)
+	})
+
+	it('#isDirectory',(done)=>
+		ack.path(assestsPath)
+		.isDirectory()
+		.then(yesNo=>{
+			assert.equal(yesNo,true)
+		})
+		.then(done).catch(done)
+	)
+
+	describe('#sync',function(){
+		it('#map',function(){
+			var mapped = ack.path(assestsPath).sync().map(function(v,i){
+				return v
+			})
+
+			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
+
+			assert.equal(mapped.length, 5)
+		})
+
+		it('#recurMap',function(){
+			var mapped = ack.path(assestsPath).sync().recurMap(function(v,i){
+				return v
+			})
+
+			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
+
+			assert.equal(mapped.length, 14)
+		})
+
+		it('#copyTo',function(){
+			const copyTo = path.join(assestsPath,'../','assets2')
+			ack.path(assestsPath).sync().copyTo( copyTo )
+			
+			const NewPathSync = ack.path(copyTo).sync()
+			assert.equal(NewPathSync.exists(), true)
+			
+			NewPathSync.delete()
+			assert.equal(NewPathSync.exists(), false)
+		})
 	})
 })

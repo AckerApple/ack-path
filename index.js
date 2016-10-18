@@ -110,7 +110,21 @@ Path.prototype.getDepth = function(){
   return tPath.split(/\/|\\/).length
 }
 
+Path.prototype.isDirectory = function(){
+  return ack.promise().bind(fs)
+  .set(this.path)
+  .callback( fs.lstat )
+  .call('isDirectory')
+}
+
 Path.prototype.isFile = function(){
+  return ack.promise().bind(fs)
+  .set(this.path)
+  .callback( fs.lstat )
+  .call('isFile')
+}
+
+Path.prototype.isLikeFile = function(){
   return this.path ? this.path.search(/(.+(\/|\\))?[^\/]+\.[^/\.]+$/) > -1 : false
 }
 
@@ -161,30 +175,33 @@ Path.prototype.paramDir = function(subPath,options){
 }
 
 Path.prototype.param = function(){
-  if(this.isFile())
+  if(this.isLikeFile()){
     throw 'not yet built';
+  }
 
   return this.paramDir.apply(this,arguments)
 }
 
 Path.prototype.delete = function(){
-  if(this.isFile()){//file delete only
+  return this.isDirectory()
+  .bind(this)
+  .then(isDir=>{
+    if(isDir){
+      return ack.promise()
+      .next(function(next){
+        rimraf(this.path,function(err){
+          if(err)return next.throw(err)
+          next()
+        })
+      },this)
+    }
+
     return ack.promise()
     .set(this.path)
-    .next(function(path,next){
-      fs.unlink(path,next)
+    .callback(function(path,callback){
+      fs.unlink(path,callback)
     })
-  }
-
-  var promise = ack.promise()
-  .next(function(next){
-    rimraf(this.path,function(err){
-      if(err)return next.throw(err)
-      next()
-    })
-  },this)
-
-  return promise
+  })
 }
 
 
@@ -250,6 +267,7 @@ Path.prototype.fileSearchUp = function(fileName){
 }
 
 /**
+  !deprecated
   returns promise of value array containing result of all required files (2nd promise value is array of results and paths)
   -error thrown if just one require fails
 */
@@ -337,6 +355,8 @@ Path.prototype.eachPath = function(eachCall, options, after){
       INCLUDE_DIRECTORIES:true,
       after:function,
       filter:['** / **.js','** / **.jade']//!remove spaces from example!
+
+      excludeByName:name=>yesNo
     }
   )
 
@@ -353,13 +373,18 @@ Path.prototype.each = function(eachCall, options, after){
     }
   }
 
-  var looping
+  var looping;
   var promise = ack.promise()
   .set(this.path, filter, opsNum)
   .bind(readDir)
   .callback(readDir.read)
   .bind(this)
-  .map(function(v,i){
+  
+  if(options.excludeByName){
+    promise = promise.then( results=>!results.filter(options.excludeByName) )
+  }
+  
+  promise = promise.map(function(v,i){
     if(looping!==false){
       looping = eachCall.call(this,v,i)
     }
@@ -418,6 +443,19 @@ var PathSync = function PathSync(path){
   return this
 }
 
+PathSync.prototype.delete = function(){
+  return rimraf.sync(this.path)
+}
+
+PathSync.prototype.isDirectory = function(){
+  return fs.lstatSync(this.path).isDirectory()
+}
+PathSync.prototype.isFolder = PathSync.prototype.isDirectory
+
+PathSync.prototype.isFile = function(){
+  return fs.lstatSync(this.path).isFile()
+}
+
 PathSync.prototype.exists = function(pathOf){
   pathOf = pathOf ? path.join(this.path,pathOf) : this.path
 /*
@@ -432,10 +470,111 @@ PathSync.prototype.exists = function(pathOf){
   return fs.existsSync(pathOf)
 }
 
-PathSync.prototype.getSubDirNameArray = function(callback){
+PathSync.prototype.getSubDirNameArray = function(){
   return readDir.readSync(this.path, ['*/'], readDir.INCLUDE_DIRECTORIES + readDir.NON_RECURSIVE)
 }
 
+/** overwrites */
+PathSync.prototype.copyTo = function(writeTo){
+  try{
+    fs.mkdirSync(writeTo)
+  }catch(e){}
+
+  const array = this.getRecurArray()
+
+  for(let x=array.length-1; x >= 0; --x){
+    let item = array[x]
+    const copyTo = path.join(writeTo, item)
+    const copyFrom = path.join(this.path,item)
+
+    const isDir = new Path(this.path).join(item).sync().isDirectory()
+
+    if(isDir){
+      let newPath = path.join(writeTo,item)
+      try{
+        fs.mkdirSync( newPath )
+      }catch(e){
+        if( e.code!='EEXIST' ){
+          throw e
+        }
+      }
+    }else{
+      const copy = fs.readFileSync(copyFrom).toString()
+      fs.writeFileSync(copyTo, copy)
+    }
+  }
+
+  return this
+}
+
+PathSync.prototype.getArray = function(options){
+  var opsNum = Path.castReadOps(options)
+    ,filter = Path.getFilterByReadOps(options)
+
+  return readDir.readSync(this.path, filter, opsNum)
+}
+
+PathSync.prototype.getRecurArray = function(options){
+  options = options || {}
+  options.NON_RECURSIVE=false
+
+  var opsNum = Path.castReadOps(options)
+    ,filter = Path.getFilterByReadOps(options)
+
+  return readDir.readSync(this.path, filter, opsNum)
+}
+
+/** file/path looper.
+
+  - Based on options, you can recursively read directories and/or files. returns promise
+  - Runs using npm package readdir. See npm readdir for more usage instructions.
+
+  @eachCall:function(String:path, Number:index)
+  @options: {
+      NON_RECURSIVE:true,
+      INCLUDE_DIRECTORIES:true,
+      after:function,
+      filter:['** / **.js','** / **.jade']//!remove spaces from example!
+    }
+
+*/
+PathSync.prototype.each = function(eachCall, options){
+  var looping;
+  var resultArray = this.getArray(options)
+  for(let resX=0; resX < resultArray.length; ++resX){
+    var v = resultArray[resX]
+    if(looping!==false){
+      looping = eachCall.call(this,v,resX)
+    }
+  }
+
+  return this
+}
+
+PathSync.prototype.map = function(eachCall, options){
+  var looping = [];
+  var resultArray = this.getArray(options)
+  for(let resX=0; resX < resultArray.length; ++resX){
+    var v = resultArray[resX]
+    if(looping!==false){
+      looping.push( eachCall.call(this,v,resX) )
+    }
+  }
+
+  return looping
+}
+
+PathSync.prototype.recur = function(eachCall, options){
+  options = options ? options : {}
+  options.NON_RECURSIVE=false
+  return this.each(eachCall, options)
+}
+
+PathSync.prototype.recurMap = function(eachCall, options){
+  options = options ? options : {}
+  options.NON_RECURSIVE=false
+  return this.map(eachCall, options)
+}
 
 
 
