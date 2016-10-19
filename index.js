@@ -499,7 +499,7 @@ PathSync.prototype.copyTo = function(writeTo){
         }
       }
     }else{
-      const copy = fs.readFileSync(copyFrom).toString()
+      const copy = fs.readFileSync(copyFrom)
       fs.writeFileSync(copyTo, copy)
     }
   }
