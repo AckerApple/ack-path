@@ -110,11 +110,16 @@ Path.prototype.getDepth = function(){
   return tPath.split(/\/|\\/).length
 }
 
-Path.prototype.isDirectory = function(){
+/** hard-checks file system if item is a folder */
+Path.isDirectory = function(target){
   return ack.promise().bind(fs)
-  .set(this.path)
+  .set(target)
   .callback( fs.lstat )
   .call('isDirectory')
+}
+
+Path.prototype.isDirectory = function(){
+  return Path.isDirectory(this.path)
 }
 
 Path.prototype.isFile = function(){
@@ -124,8 +129,12 @@ Path.prototype.isFile = function(){
   .call('isFile')
 }
 
+Path.isLikeFile = function(targetPath){
+  return targetPath ? targetPath.search(/(.+(\/|\\))?[^\/]+\.[^/\.]+$/) > -1 : false
+}
+
 Path.prototype.isLikeFile = function(){
-  return this.path ? this.path.search(/(.+(\/|\\))?[^\/]+\.[^/\.]+$/) > -1 : false
+  return Path.isLikeFile(this.path)
 }
 
 Path.prototype.exists = function(cbOrPath,cb){
@@ -158,52 +167,65 @@ Path.prototype.require = function(file){
   })
 }
 
-//recursively creates paths
+/** creates folder if not defined. Does not consider if defined path is actually a file path */
+Path.param = function(folderPath,options){
+  return ack.promise()
+  .callback(function(callback){
+    mkdirp(folderPath,options,callback)
+  })
+  .bind(this)
+}
+
+/** creates folder if not defined. Takes into consideration if defined path is actually a file path */
 Path.prototype.paramDir = function(subPath,options){
   var tarPath = subPath ? path.join(this.path,subPath) : this.path
 
-  return ack.promise()
-  .next(function(next){
-    mkdirp(tarPath,options,function(err){
-      if(err)return next.throw(err)
-      next()
-    })
-  })
-  .then(function(){
-    return this
-  },this)
-}
-
-Path.prototype.param = function(){
-  if(this.isLikeFile()){
-    throw 'not yet built';
+  if(Path.isLikeFile(tarPath)){
+    var tarPath = path.join(tarPath,'../')
   }
 
-  return this.paramDir.apply(this,arguments)
+  return Path.param(tarPath, options)
 }
 
-Path.prototype.delete = function(){
-  return this.isDirectory()
-  .bind(this)
+/** creates folder if not defined. Does not consider if defined path is actually a file path */
+Path.prototype.param = function(subPath,options){
+  var tarPath = subPath ? path.join(this.path,subPath) : this.path
+  return Path.param(tarPath, options)
+}
+
+Path.delete = function(target){
+  return Path.isDirectory(target)
   .then(isDir=>{
     if(isDir){
       return ack.promise()
-      .next(function(next){
-        rimraf(this.path,function(err){
-          if(err)return next.throw(err)
-          next()
-        })
-      },this)
+      .callback(function(callback){
+        rimraf(target,callback)
+      })
     }
 
     return ack.promise()
-    .set(this.path)
+    .set(target)
     .callback(function(path,callback){
       fs.unlink(path,callback)
     })
   })
 }
 
+Path.prototype.delete = function(subPath){
+  var tarPath = subPath ? path.join(this.path,subPath) : this.path
+  return Path.delete(tarPath)
+}
+
+/** deletes folder. Takes into consideration if defined path is actually a file path */
+Path.prototype.deleteDir = function(subPath){
+  var tarPath = subPath ? path.join(this.path,subPath) : this.path
+
+  if(Path.isLikeFile(tarPath)){
+    var tarPath = path.join(tarPath,'../')
+  }
+
+  return Path.delete(tarPath)
+}
 
 Path.prototype.getSubDirByName = function(subDirName){
   return this.new.join(subDirName)
@@ -456,8 +478,20 @@ PathSync.prototype.isFile = function(){
   return fs.lstatSync(this.path).isFile()
 }
 
-PathSync.prototype.exists = function(pathOf){
-  pathOf = pathOf ? path.join(this.path,pathOf) : this.path
+/** takes into consideration if path is actually a file */
+PathSync.prototype.dirExists = function(appendPath){
+  appendPath = appendPath ? path.join(this.path,appendPath) : this.path
+  
+  if(Path.isLikeFile(appendPath)){
+    appendPath = path.join(appendPath,'../')
+  }
+
+  return fs.existsSync(appendPath)
+}
+
+/** takes into consideration if path is actually a file */
+PathSync.prototype.exists = function(appendPath){
+  appendPath = appendPath ? path.join(this.path,appendPath) : this.path
 /*
   try{
     fs.statSync(filePath);
@@ -467,7 +501,7 @@ PathSync.prototype.exists = function(pathOf){
     //if(err.code == 'ENOENT') return false;
   }
 */
-  return fs.existsSync(pathOf)
+  return fs.existsSync(appendPath)
 }
 
 PathSync.prototype.getSubDirNameArray = function(){

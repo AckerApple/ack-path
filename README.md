@@ -9,7 +9,10 @@ var Path = path(__dirname)
 //write file promise
 Path.join('file-name.js').writeFile(string).then().catch()
 
-//created directory if not existant
+//created directory if not existant. Does not take into condsideration if path is actually a file (file path will be created as a folder path)
+Path.param().then()
+
+//created directory if not existant. Takes condsideration if path is actually a file and only creates folder path
 Path.paramDir().then()
 
 //string manipulation
@@ -37,6 +40,7 @@ PathTest.removeFile().path == /test/
 ```
 var PathSync = path(__dirname).sync()
 
+PathSync.dirExists()//considers if path is actually a file
 PathSync.exists()
 
 PathSync.delete()

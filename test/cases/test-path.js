@@ -130,22 +130,64 @@ describe('ack.path',function(){
 		.catch(done)
 	})
 
-	it('#param',function(done){
-		var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2')
-		Path.param()
-		.then(function(){
-			assert.equal(Path.sync().exists(),true,'path was not succesfully created')
+	describe('actual-hard-disc',()=>{
+		afterEach(done=>{
+			var Path = ack.path(assestsPath).join('paramPathTest0')
+			
+			Path.param().bind(Path)
+			.then( Path.delete )
+			.then(function(){
+				assert.equal(Path.sync().exists(),false,'test path was not succesfully deleted')
+			})
+			.then(done).catch(done)
 		})
-		.then(done).catch(done)
-	})
 
-	it('#delete',function(done){
-		var Path = ack.path(assestsPath).join('paramPathTest0')
-		Path.delete()
-		.then(function(){
-			assert.equal(Path.sync().exists(),false,'path was not succesfully deleted')
+		describe('#param',()=>{
+			it('target-folder',function(done){
+				var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2')
+				Path.param()
+				.then(function(){
+					assert.equal(Path.sync().exists(),true,'path was not succesfully created')
+				})
+				.then(done).catch(done)
+			})
+
+			it('target-file-folder',function(done){
+				var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2','acker.js')
+				Path.param()
+				.then(function(){
+					assert.equal(Path.sync().exists(),true,'path was not succesfully created')
+				})
+				.then(()=>Path.delete())
+				.then(done).catch(done)
+			})
 		})
-		.then(done).catch(done)
+
+		describe('#paramDir',()=>{
+			it('target-folder',function(done){
+				var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2')
+				
+				Path.paramDir().bind(Path)
+				.then(function(){
+					assert.equal(Path.sync().dirExists(),true,'path was not succesfully created')
+					assert.equal(Path.sync().exists(),true)
+				})
+				.then( Path.deleteDir )
+				.then(done).catch(done)
+			})
+
+			it('target-file-folder',function(done){
+				var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2','acker.js')
+				
+				Path.paramDir().bind(Path)
+				.then(function(){
+					assert.equal(Path.sync().dirExists(),true,'path was not succesfully created')
+					assert.equal(Path.sync().exists(),false,'file/folder was created when it should have not')
+				})
+				.then( Path.deleteDir )
+				.then(done).catch(done)
+			})
+		})
 	})
 
 	it('#isDirectory',(done)=>
