@@ -98,7 +98,7 @@ File.prototype.append = function(output){
 }
 
 File.prototype.write = function(output){
-  return ack.promise().set(this.path,output).callback(fs.writeFile).then(function(){return this},this)
+  return ack.promise().set(this.path,output).callback(fs.writeFile)//.then(function(){return this},this)
 }
 
 

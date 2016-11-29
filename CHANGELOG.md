@@ -1,6 +1,10 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.2.1] - 2016-11-29
+### Change
+- writeFile no longer promises the ack-path object. Instead null is passed
+
 ## [1.2.0] - 2016-11-23
 No breaking changes but significant enough worth a minor version bump
 ### Added
