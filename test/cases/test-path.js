@@ -69,27 +69,35 @@ describe('ack.path',function(){
 		ack.path(mockPath).eachPath(repeater,ops).then(done).catch(done)
 	})
 
-	it('#recurRequirePath',function(done){
-		ack.path(mockPath).recurRequirePath()
-		.then(function(fileResultArray, fileResultPathArray){
-			assert.notEqual(0,fileResultArray.length)
-			for(var x=fileResultArray.length-1; x >= 0; --x){
-				assert.equal(typeof fileResultArray[x],'string','module.exports')
-			}
+	it('#getSubDirNameArray',done=>{
+		ack.path(mockPath).getSubDirNameArray()
+		.then(res=>{
+			assert.equal(res.length, 1)
+			assert.equal(res[0], 'SomeFolder')
+		})
+		.then(done).catch(done)
+	})
+
+	it('#getSubDirArray',done=>{
+		ack.path(mockPath).getSubDirArray()
+		.then(res=>{
+			assert.equal(res.length, 1)
+			assert.equal(res[0].getName(), 'SomeFolder')
 		})
 		.then(done).catch(done)
 	})
 
 	it('#nextSubDir',function(done){
 		var ackFound = false
-		ack.path(tarDir).new.join('../')
+		ack.path(tarDir).Join('../')
 		.nextSubDir(function(Path,i,next){
 			assert.equal(Path.sync().exists(),true)
 			if(Path.sync().exists('index.js')){
 				ackFound=true
 			}
 			next()
-		}).then(function(dirNameArray){
+		})
+		.then(function(dirNameArray){
 			assert.equal(ackFound,true)
 		})
 		.then(done).catch(done)
@@ -200,14 +208,28 @@ describe('ack.path',function(){
 	)
 
 	describe('#sync',function(){
+		it('#getSubDirNameArray',()=>{
+			const res = ack.path(mockPath).sync().getSubDirNameArray()
+			assert.equal(typeof res, 'object')
+			assert.equal(res.constructor, Array)
+			assert.equal(res.length, 1)
+			assert.equal(res[0], 'SomeFolder')
+		})
+
 		it('#map',function(){
 			var mapped = ack.path(assestsPath).sync().map(function(v,i){
 				return v
 			})
 
 			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
-
+			assert.equal(typeof mapped, 'object')
+			assert.equal(mapped.constructor, Array)
 			assert.equal(mapped.length, 5)
+		})
+
+		it('#getArray',function(){
+			var mapped = ack.path(assestsPath).sync().getArray({recursive:true})
+			assert.equal(mapped.length, 16)
 		})
 
 		it('#recurMap',function(){
@@ -216,7 +238,6 @@ describe('ack.path',function(){
 			})
 
 			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
-
 			assert.equal(mapped.length, 14)
 		})
 

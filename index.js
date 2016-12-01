@@ -2,7 +2,9 @@
 var fs = require('fs')
   ,path = require('path')
   ,ack = require('ack-x')
-  ,readDir = require('readdir')//consider replacing with "readdirp"
+  //,nodeDir = require('node-dir')
+  ,nodeDir = require('node-dir')//consider replacing with "readdirp"
+  //,readDir = require('readdir')//consider replacing with "readdirp"
   ,weave = require('./weave')
   ,mkdirp = require('mkdirp')//recursive create directories
   ,rimraf = require('rimraf')//recursive delete directories
@@ -37,9 +39,13 @@ Path.prototype.sync = function(){
   return new PathSync(this.path)
 }
 
-Path.prototype.getName = function(){
-  var p = this.path.replace(/\\|\/$/g,'')//remove last slash
+Path.getName = function(p){
+  p = p.replace(/\\|\/$/g,'')//remove last slash
   return p.split(/\\|\//).pop()//return last
+}
+
+Path.prototype.getName = function(){
+  return Path.getName(this.path)
 }
 
 //!Stand alone function, not part of Path Class
@@ -83,6 +89,7 @@ Path.prototype.ext = function(ext){
   return this
 }
 
+/* work a path up to root item */
 Path.prototype.upEach = function(eachMethod){
   return this.upNext(function(Path,next){
       var r = eachMethod(Path)
@@ -232,28 +239,43 @@ Path.prototype.getSubDirByName = function(subDirName){
 }
 
 Path.prototype.getSubDirArray = function(){
-  var $this = this
-  return ack.promise()
-  .next(function(next){
-    $this.getSubDirNameArray(function(sdnArray){
-      sdnArray.forEach(function(v,i){
-        var SubDir = $this.getSubDirByName(v)
-        sdnArray[i] = SubDir
-      })
-      next(sdnArray)
+  return this.getSubDirNameArray()
+  .then(sdnArray=>{
+    sdnArray.forEach((v,i)=>{
+      var SubDir = this.getSubDirByName(v)
+      sdnArray[i] = SubDir
     })
-
+    return sdnArray
   })
 }
 
-Path.prototype.getSubDirNameArray = function(callback){
-  readDir.read(this.path, ['*/'], readDir.INCLUDE_DIRECTORIES + readDir.NON_RECURSIVE, function(err,a){
-    if(err){
-      console.error(err)
-    }
-    callback(a)
+/** returns names of subdirectories */
+Path.prototype.getSubDirNameArray = function(){
+  return ack.promise().then(()=>nodeDir.promiseFiles(this.path, 'dir', {recursive:false, shortName:true}))
+}
+
+/** 
+  @callback - function(Path path, parentValue, isFile)
+  @options - see Path.each method
+*/
+Path.prototype.recur = function(callbackOrParentValue, callbackOrOptions, options){
+  const callback = callbackOrOptions || callbackOrParentValue
+  options = options || (callbackOrOptions.constructor==Function?null:callbackOrOptions)
+
+  const eachDir = v=>{
+    const newParentValue = callback.call({quit:'not yet made'},v,callbackOrParentValue,false)
+    return v.recur(newParentValue, callback, options)
+  }
+
+  return this.eachFilePath( Path=>callback(Path, callbackOrParentValue, true), options )
+  .then( ()=>this.getSubDirNameArray() )
+  .then( array=>{
+    const promises = []
+    array.forEach(v=>{
+      promises.push( eachDir(this.Join(v)) )
+    })
+    return ack.promise().all(promises)
   })
-  return this
 }
 
 Path.prototype.eachSubDir = function(callback, last){
@@ -262,14 +284,16 @@ Path.prototype.eachSubDir = function(callback, last){
     array.forEach(function(v,i){
       return callback.call(t,v,i)
     })
-    if(last)last.call(this,array)
+    if(last)last.call(this,array)//deprecated
+    return array
   })
   return this
 }
 
 Path.prototype.nextSubDir = function(each){
   var $this=this
-  return this.getSubDirArray().then(function(array){
+  return this.getSubDirArray()
+  .then(function(array){
     var promise = ack.promise()
     array.forEach(function(v,i){
       promise.next(function(next){
@@ -288,66 +312,18 @@ Path.prototype.fileSearchUp = function(fileName){
   return new SearchUpPath(new Path(nPath))
 }
 
-/**
-  !deprecated
-  returns promise of value array containing result of all required files (2nd promise value is array of results and paths)
-  -error thrown if just one require fails
+/** see eachPath function
+  @after - deprecated
 */
-Path.prototype.recurRequirePath = function(options){
-  options = options ? options: {}
-  options.filter = options.filter ? options.filter : []
-  options.filter.push('**.js')//current directory/subdirectory with .js extension
-  var resultArray = []
-  var requirePathArray = []
-
-  var processor = function(Path, i){
-    var result = require(Path.path)
-    resultArray.push( result )
-    requirePathArray.push( {result:result, Path:Path, path:Path.path} )
-    /*
-    try{
-      var mod = require(Path.path)
-    }catch(e){
-      eachCall(e,null,Path,i);return
-    }
-    return eachCall(null, mod, Path, i)
-    */
-  }
-
-  return this.recurFilePath(processor, options).set(resultArray, requirePathArray)
-}
-
-/**
-  !deprecated
-  each js file will be found and eachCall(result) run.
-*/
-Path.prototype.recurRequireFilePath = function(eachCall, options, after){
-  ack.deprecated('recurRequireFilePath is a deprecated method in Path. User recurRequirePath')
-
-  options = options ? options: {}
-  options.filter = options.filter ? options.filter : []
-  options.filter.push('**.js')//current directory/subdirectory with .js extension
-
-  var processor = function(Path, i){
-    try{
-      var mod = require(Path.path)
-    }catch(e){
-      eachCall(e,null,Path,i);return
-    }
-    return eachCall(null, mod, Path, i)
-  }
-
-  return this.recurFilePath(processor, options, after)
-}
-
-/** see eachPath function */
 Path.prototype.recurFilePath = function(eachCall, options, after){
   options = options ? options : {}
   options.NON_RECURSIVE=false
   return this.eachFilePath(eachCall, options, after)
 }
 
-/** see eachPath function */
+/** see eachPath function
+  @after - deprecated
+*/
 Path.prototype.eachFilePath = function(eachCall, options, after){
   options = options ? options : {}
   options.INCLUDE_DIRECTORIES=false
@@ -357,6 +333,7 @@ Path.prototype.eachFilePath = function(eachCall, options, after){
 
 /** see Path.prototype.each function
   @eachCall:function(Object:Path, Number:index)
+  @after - deprecated
 */
 Path.prototype.eachPath = function(eachCall, options, after){
   var repeater = function(v,i){
@@ -366,7 +343,6 @@ Path.prototype.eachPath = function(eachCall, options, after){
 }
 
 /** file/path looper.
-
   - Based on options, you can recursively read directories and/or files. returns promise
   - Runs using npm package readdir. See npm readdir for more usage instructions.
 
@@ -375,17 +351,19 @@ Path.prototype.eachPath = function(eachCall, options, after){
     {
       NON_RECURSIVE:true,
       INCLUDE_DIRECTORIES:true,
+      INCLUDE_HIDDEN:true,
       after:function,
       filter:['** / **.js','** / **.jade']//!remove spaces from example!
 
       excludeByName:name=>yesNo
     }
   )
-
 */
 Path.prototype.each = function(eachCall, options, after){
+  /*
   var opsNum = Path.castReadOps(options)
-    ,filter = Path.getFilterByReadOps(options)
+    ,filter = options.filter || []
+  */
 
   if(!after){
     if(typeof(options)=='function'){
@@ -395,15 +373,21 @@ Path.prototype.each = function(eachCall, options, after){
     }
   }
 
+  options.shortName = options.shortName==null ? true : options.shortName
+  //options.combine = true
+
   var looping;
   var promise = ack.promise()
-  .set(this.path, filter, opsNum)
-  .bind(readDir)
-  .callback(readDir.read)
+  //.set(this.path, filter, opsNum)
+  //.bind(readDir)
+  //.callback(readDir.read,'')
+  .then(()=>nodeDir.promiseFiles(this.path,'combine',options))
   .bind(this)
   
   if(options.excludeByName){
-    promise = promise.then( results=>!results.filter(options.excludeByName) )
+    promise = promise.then( results=>{
+      !results.filter(options.excludeByName)
+    })
   }
   
   promise = promise.map(function(v,i){
@@ -419,13 +403,13 @@ Path.prototype.each = function(eachCall, options, after){
   return promise
 }
 
+/** promise */
 Path.prototype.eachSubDirName = function(callback){
-  this.getSubDirNameArray(function(array){
+  return this.getSubDirNameArray().then(array=>{
     array.forEach(function(v,i){
       callback(v,i)
     })
   })
-  return this
 }
 
 
@@ -435,7 +419,7 @@ Path.getFilterByReadOps = function(options){
   return null
 }
 
-
+/*
 Path.castReadOps = function(options){
   options = options ? options : {}
   var opResult = 0
@@ -448,7 +432,7 @@ Path.castReadOps = function(options){
 
   return opResult
 }
-
+*/
 
 
 
@@ -505,7 +489,8 @@ PathSync.prototype.exists = function(appendPath){
 }
 
 PathSync.prototype.getSubDirNameArray = function(){
-  return readDir.readSync(this.path, ['*/'], readDir.INCLUDE_DIRECTORIES + readDir.NON_RECURSIVE)
+  return nodeDir.subdirs(this.path, 'combine', null, {sync:true, shortName:true})
+  //return readDir.readSync(this.path, ['*/'], readDir.INCLUDE_DIRECTORIES + readDir.NON_RECURSIVE)
 }
 
 /** overwrites */
@@ -542,20 +527,34 @@ PathSync.prototype.copyTo = function(writeTo){
 }
 
 PathSync.prototype.getArray = function(options){
+  options = options || {}
+  /*
   var opsNum = Path.castReadOps(options)
     ,filter = Path.getFilterByReadOps(options)
+  */
 
-  return readDir.readSync(this.path, filter, opsNum)
+  options.recursive = options.recursive==null ? false : options.recursive
+  options.shortName = options.shortName==null ? true : options.shortName
+  //options.combine = options.combine==null ? true : options.combine
+  options.sync = true
+
+  return nodeDir.files(this.path, 'combine', null, options)
+  //return readDir.readSync(this.path, filter, opsNum)
 }
 
 PathSync.prototype.getRecurArray = function(options){
   options = options || {}
-  options.NON_RECURSIVE=false
+  options.NON_RECURSIVE = false
+  options.recursive = true
+  options.sync = true
 
+  /*
   var opsNum = Path.castReadOps(options)
     ,filter = Path.getFilterByReadOps(options)
+  */
 
-  return readDir.readSync(this.path, filter, opsNum)
+  return nodeDir.files(this.path, 'all', null, options)
+  //return readDir.readSync(this.path, filter, opsNum)
 }
 
 /** file/path looper.
@@ -585,9 +584,13 @@ PathSync.prototype.each = function(eachCall, options){
   return this
 }
 
+/** builds array of results
+  @eachCall:function(String:path, Number:index)
+*/
 PathSync.prototype.map = function(eachCall, options){
   var looping = [];
   var resultArray = this.getArray(options)
+
   for(let resX=0; resX < resultArray.length; ++resX){
     var v = resultArray[resX]
     if(looping!==false){
@@ -604,9 +607,13 @@ PathSync.prototype.recur = function(eachCall, options){
   return this.each(eachCall, options)
 }
 
+/** builds array of results. See .map function
+  @eachCall:function(String:path, Number:index)
+*/
 PathSync.prototype.recurMap = function(eachCall, options){
   options = options ? options : {}
-  options.NON_RECURSIVE=false
+  options.NON_RECURSIVE = false
+  options.recursive = true
   return this.map(eachCall, options)
 }
 
@@ -873,9 +880,5 @@ SearchUpPath.prototype.go = function(){
     return Path.upNext(nextProcessor)
   })
 }
-
-
-
-
 
 module.exports = function(path){return new Path(path)}
