@@ -10,7 +10,9 @@ var fs = require('fs')
   ,rimraf = require('rimraf')//recursive delete directories
 //,jC = require('jC')
 
-var Path = function(path){
+var Path = function Path(path){
+  //this.path = path && path.constructor==Path ? path.path : path
+  //this.path = path && path.path ? path.path : path
   this.path = path
   this.new = new NewPath(this)
   this.string = new PathString(this)
@@ -180,7 +182,6 @@ Path.param = function(folderPath,options){
   .callback(function(callback){
     mkdirp(folderPath,options,callback)
   })
-  .bind(this)
 }
 
 /** creates folder if not defined. Takes into consideration if defined path is actually a file path */
@@ -191,13 +192,13 @@ Path.prototype.paramDir = function(subPath,options){
     var tarPath = path.join(tarPath,'../')
   }
 
-  return Path.param(tarPath, options)
+  return Path.param(tarPath, options).bind(this)
 }
 
 /** creates folder if not defined. Does not consider if defined path is actually a file path */
 Path.prototype.param = function(subPath,options){
   var tarPath = subPath ? path.join(this.path,subPath) : this.path
-  return Path.param(tarPath, options)
+  return Path.param(tarPath, options).bind(this)
 }
 
 Path.delete = function(target){

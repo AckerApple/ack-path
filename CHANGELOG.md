@@ -1,6 +1,10 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.3.1] - 2016-12-01
+### Fixed
+- when using path.param(), the promise binding was incorrect
+
 ## [1.3.0] - 2016-12-01
 ### Breaking Changes
 - replace [readdir](https://www.npmjs.com/package/readdir) with forked version of [node-dir](https://github.com/AckerApple/node-dir)
