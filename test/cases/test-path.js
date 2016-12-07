@@ -18,6 +18,14 @@ describe('ack.path',function(){
 
 	beforeEach(configPaths)
 
+	it('#join',()=>{
+		assert.equal(ack.path('1').join('2','3').path, path.join('1','2','3'))
+	})
+
+	it('#Join',()=>{
+		assert.equal(ack.path('1').Join('2','3').path, path.join('1','2','3'))
+	})
+
 	it('#removeExt',function(){
 		assert.equal(ack.path('/test/file.js').removeExt().path, '/test/file')
 		assert.equal(ack.path('/test/file').removeExt().path, '/test/file')

@@ -19,13 +19,25 @@ var Path = function Path(path){
   return this
 }
 
+Path.prototype.rename = function(newname){
+  const nPath = this.Join('../', newname).path
+
+  return ack.promise()
+  .bind(this)
+  .callback(function(cb){
+    return fs.rename(this.path,nPath,cb)
+  })
+}
+
 Path.prototype.writeFile = function(output){
   return this.File().write(output)
 }
 
 /** performs .join but original object remains untouched */
-Path.prototype.Join = function(pathTo){
-  pathTo = pathTo ? path.join(this.path,pathTo) : this.path
+Path.prototype.Join = function(pathTo, pathToPart2, pathToPart3){
+  const args = Array.prototype.slice.call(arguments)
+  args.unshift(this.path)
+  pathTo = path.join.apply(path,args)
   return new Path(pathTo)
 }
 Path.prototype.Path = Path.prototype.Path

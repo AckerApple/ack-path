@@ -1,6 +1,10 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.3.2] - 2016-12-07
+### Added
+- rename function
+
 ## [1.3.1] - 2016-12-01
 ### Fixed
 - when using path.param(), the promise binding was incorrect
