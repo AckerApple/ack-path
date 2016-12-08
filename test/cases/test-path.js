@@ -37,11 +37,15 @@ describe('ack.path',function(){
 	})
 
 	describe('#each',function(){
-		it('path-array-compare',function(done){
+		it('path-array-compare',done=>{
+			const x=0
+
+			var nameArray = []			
 			ack.path(mockPath)
 			.each(function(name,i){
-				assert.equal(name,mockPathArray[i],'path name check')
-			},{NON_RECURSIVE:false, excludeByName:name=>name=='.DS_STORE'})
+				nameArray.push(name)
+			},{NON_RECURSIVE:false, excludeByName:name=>name.toUpperCase()=='.DS_STORE'})
+			.then( ()=>assert.deepEqual(nameArray.sort(), mockPathArray.sort()) )
 			.then(done).catch(done)
 		})
 
@@ -69,12 +73,19 @@ describe('ack.path',function(){
 	})
 
 	it('#eachPath',function(done){
-		var ops = {NON_RECURSIVE:false, excludeByName:name=>name=='.DS_STORE'}
+		var ops = {NON_RECURSIVE:false, excludeByName:name=>name.toUpperCase()=='.DS_STORE'}
+		const names = []
 		var repeater = function(Path,i){
-			assert.equal(Path.getName(), mockPathNameArray[i],'Path.name check, expected '+Path.getName()+' but '+i+' got '+mockPathNameArray[i])
+			names.push(Path.getName())
+			//assert.equal(Path.getName(), mockPathNameArray[i],'Path.name check, expected '+Path.getName()+' but '+i+' got '+mockPathNameArray[i])
 		}
 
-		ack.path(mockPath).eachPath(repeater,ops).then(done).catch(done)
+		ack.path(mockPath)
+		.eachPath(repeater,ops)
+		.then(()=>{
+			assert.deepEqual(mockPathNameArray.sort(), names.sort())
+		})
+		.then(done).catch(done)
 	})
 
 	it('#getSubDirNameArray',done=>{

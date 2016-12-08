@@ -430,7 +430,7 @@ Path.prototype.each = function(eachCall, options, after){
   
   if(options.excludeByName){
     promise = promise.then( results=>{
-      results.filter(options.excludeByName)
+      return results.filter((name,i)=>!options.excludeByName(name))
     })
   }
   
