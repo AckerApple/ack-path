@@ -232,12 +232,12 @@ describe('ack.path',function(){
 			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
 			assert.equal(typeof mapped, 'object')
 			assert.equal(mapped.constructor, Array)
-			assert.equal(mapped.length, 5)
+			assert.equal(mapped.length, 6)
 		})
 
 		it('#getArray',function(){
 			var mapped = ack.path(assestsPath).sync().getArray({recursive:true})
-			assert.equal(mapped.length, 16)
+			assert.equal(mapped.length, 17)
 		})
 
 		it('#recurMap',function(){
@@ -246,7 +246,7 @@ describe('ack.path',function(){
 			})
 
 			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
-			assert.equal(mapped.length, 14)
+			assert.equal(mapped.length, 15)
 		})
 
 		it('#copyTo',function(){

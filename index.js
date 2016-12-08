@@ -394,12 +394,39 @@ Path.prototype.each = function(eachCall, options, after){
   //.set(this.path, filter, opsNum)
   //.bind(readDir)
   //.callback(readDir.read,'')
-  .then(()=>nodeDir.promiseFiles(this.path,'combine',options))
+  .then(()=>nodeDir.promiseFiles(this.path,'all',options))
+  .then(results=>{
+    //put a slash on all directories
+    for(let x=results.dirs.length-1; x >= 0; --x){
+      results.dirs[x] = results.dirs[x]+path.sep
+    }
+
+    results.files.push.apply(results.files, results.dirs)
+
+    return results.files
+  })
   .bind(this)
+  
+  //support deprecated method of filtering
+  if(options.filter){
+    promise = promise.then(results=>{
+      results.filter(res=>{
+        for(let x=options.filter.length-1; x >= 0; --x){
+          let reg = options.filter[x].replace(/\./g,'\\.')
+          reg = reg.replace(/\*/g,'.*')
+          let match = res.search(new RegExp(reg, 'gi'))
+          if(match>=0){
+            return true
+          }
+        }
+        return false
+      })
+    })
+  }
   
   if(options.excludeByName){
     promise = promise.then( results=>{
-      !results.filter(options.excludeByName)
+      results.filter(options.excludeByName)
     })
   }
   
