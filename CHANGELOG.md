@@ -1,6 +1,12 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.3.4] - 2016-12-08
+### Fixed
+- Restored support for deprecated ackPath.each({filter:[String]})
+- Restored a slash that appeared at the end
+- Restored the way readdir fed combined recursive results
+
 ## [1.3.2] - 2016-12-07
 ### Added
 - rename function

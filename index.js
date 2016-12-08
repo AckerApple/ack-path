@@ -386,8 +386,7 @@ Path.prototype.each = function(eachCall, options, after){
     }
   }
 
-  options.shortName = options.shortName==null ? true : options.shortName
-  //options.combine = true
+  options.shortName = options.shortName==null ? false : options.shortName
 
   var looping;
   var promise = ack.promise()
@@ -403,18 +402,23 @@ Path.prototype.each = function(eachCall, options, after){
 
     results.files.push.apply(results.files, results.dirs)
 
-    return results.files
+    return results.files.map(item=>item.substring(this.path.length+path.sep.length,item.length))
   })
   .bind(this)
   
   //support deprecated method of filtering
   if(options.filter){
     promise = promise.then(results=>{
-      results.filter(res=>{
+      return results.filter(item=>{
+        /*
+        if(item.substring(item.length-path.sep.length, results.length)==path.sep){
+          return true//do not filter directories
+        }*/
+
         for(let x=options.filter.length-1; x >= 0; --x){
           let reg = options.filter[x].replace(/\./g,'\\.')
           reg = reg.replace(/\*/g,'.*')
-          let match = res.search(new RegExp(reg, 'gi'))
+          let match = item.search(new RegExp(reg, 'gi'))
           if(match>=0){
             return true
           }
