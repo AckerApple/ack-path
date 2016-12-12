@@ -418,6 +418,7 @@ Path.prototype.each = function(eachCall, options, after){
         for(let x=options.filter.length-1; x >= 0; --x){
           let reg = options.filter[x].replace(/\./g,'\\.')
           reg = reg.replace(/\*/g,'.*')
+          reg += '$'//ensure regx match full and not just part of item
           let match = item.search(new RegExp(reg, 'gi'))
           if(match>=0){
             return true

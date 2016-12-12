@@ -1,6 +1,10 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.3.5] - 2016-12-12
+### Fixed
+- Added to deprecated filter array REGX conversion for better accuracy to old deprecated method
+
 ## [1.3.4] - 2016-12-08
 ### Fixed
 - Restored support for deprecated ackPath.each({filter:[String]})
