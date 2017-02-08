@@ -833,7 +833,7 @@ SearchUpPath.prototype.getIndexFileName = function(v){
   return this.indexFileName
 }
 
-
+/*
 SearchUpPath.prototype.setSuccess = function(v){
   this.onSuccess = v;return this;
 }
@@ -842,7 +842,7 @@ SearchUpPath.prototype.success = SearchUpPath.prototype.setSuccess
 SearchUpPath.prototype.getSuccess = function(){
   return this.onSuccess
 }
-
+*/
 
 SearchUpPath.prototype.setRollUpWith = function(v){
   this.rollupWith = v;return this;
@@ -853,7 +853,7 @@ SearchUpPath.prototype.getRollUpWith = function(){
   return this.rollupWith
 }
 
-
+/*
 SearchUpPath.prototype.setFail = function(v){
   this.onFail = v;return this;
 }
@@ -862,13 +862,13 @@ SearchUpPath.prototype.fail = SearchUpPath.prototype.setFail
 SearchUpPath.prototype.getFail = function(){
   return this.onFail
 }
-
+*/
 
 SearchUpPath.prototype.go = function(){
-  var success = this.getSuccess()
-    ,roll = this.getRollUpWith()
+  //var success = this.getSuccess()
+  var roll = this.getRollUpWith()
     ,Path = this.Path
-    ,fail = this.getFail()
+    //,fail = this.getFail()
     ,ext = this.getExt()
     ,ifn = this.getIndexFileName()+'.'+ext
 
@@ -881,7 +881,7 @@ SearchUpPath.prototype.go = function(){
       if(isFile){
         Path.ifExists(function(){
           callback(null, Path.path, resultStatus)
-          success(Path.path)//deprecated in favor of promises
+          //success(Path.path)//deprecated in favor of promises
         },function(p){
           if(roll){
             roll.up()//rollup path
@@ -901,9 +901,10 @@ SearchUpPath.prototype.go = function(){
             next()
           }else{
             callback(null, null, resultStatus)//could not be found
-            fail()
+            //fail()
           }
         }
+        
         var testExt = function(){
           var isRollLeft = roll==null || roll.getDepth()>=1
 
@@ -915,11 +916,11 @@ SearchUpPath.prototype.go = function(){
 
             Path.ifExists(function(){
               callback(null, Path.path, resultStatus)
-              success(Path.path)
+              //success(Path.path)
             },failUp)
           }else{
             callback(null, null, resultStatus)//could not be found
-            fail()
+            //fail()
           }
         }
 
@@ -931,7 +932,7 @@ SearchUpPath.prototype.go = function(){
           Path.join(ifn).ifExists(function(){
             resultStatus.isIndex = true
             callback(null, Path.path, resultStatus)
-            success(Path.path)
+            //success(Path.path)
           },function(){
             resultStatus.isFirstFind = false//we have to seach elsewhere so it is not the first find
 
