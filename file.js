@@ -85,6 +85,10 @@ File.prototype.read = function(){
   return ack.promise().set(this.path).callback(fs.readFile)
 }
 
+File.prototype.readAsBase64 = function(){
+  return this.read(this.path).then(buffer=>buffer.toString('base64'))
+}
+
 File.prototype.readAsString = function(){
   return this.read().call('toString')
 }

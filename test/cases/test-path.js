@@ -226,49 +226,23 @@ describe('ack.path',function(){
 		.then(done).catch(done)
 	)
 
-	describe('#sync',function(){
-		it('#getSubDirNameArray',()=>{
-			const res = ack.path(mockPath).sync().getSubDirNameArray()
-			assert.equal(typeof res, 'object')
-			assert.equal(res.constructor, Array)
-			assert.equal(res.length, 1)
-			assert.equal(res[0], 'SomeFolder')
+	it('#getRecurArray',()=>{
+		return ack.path(assestsPath).getRecurArray()
+		.then(array=>{
+			assert.equal(array.constructor, Array)
 		})
+	})
 
-		it('#map',function(){
-			var mapped = ack.path(assestsPath).sync().map(function(v,i){
-				return v
-			})
-
-			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
-			assert.equal(typeof mapped, 'object')
-			assert.equal(mapped.constructor, Array)
-			assert.equal(mapped.length, 6)
-		})
-
-		it('#getArray',function(){
-			var mapped = ack.path(assestsPath).sync().getArray({recursive:true})
-			assert.equal(mapped.length, 17)
-		})
-
-		it('#recurMap',function(){
-			var mapped = ack.path(assestsPath).sync().recurMap(function(v,i){
-				return v
-			})
-
-			mapped = mapped.filter(item=>item.search(/\.DS_Store/)<0)
-			assert.equal(mapped.length, 15)
-		})
-
-		it('#copyTo',function(){
-			const copyTo = path.join(assestsPath,'../','assets2')
-			ack.path(assestsPath).sync().copyTo( copyTo )
-			
-			const NewPathSync = ack.path(copyTo).sync()
-			assert.equal(NewPathSync.exists(), true)
-			
-			NewPathSync.delete()
-			assert.equal(NewPathSync.exists(), false)
+	it('#copyTo',function(){
+		const copyTo = path.join(assestsPath,'../','assets2')
+		return ack.path(assestsPath).copyTo( copyTo )
+		.then(()=>{		
+			const NewPath = ack.path(copyTo).sync()
+			assert.equal(NewPath.exists(), true)
+/*
+			NewPath.delete()
+			assert.equal(NewPath.exists(), false)
+*/
 		})
 	})
 })

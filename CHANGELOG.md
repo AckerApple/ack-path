@@ -1,6 +1,14 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.4.0] - 2017-02-08
+### Breaking Change
+- .getArray() and .getRecurArray() both were not returning an actual array, now they do
+### Added
+- Added .copyTo()
+### Fixed
+- sync().copyTo()
+
 ## [1.3.5] - 2016-12-12
 ### Fixed
 - Added to deprecated filter array REGX conversion for better accuracy to old deprecated method

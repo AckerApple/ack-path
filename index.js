@@ -19,6 +19,48 @@ var Path = function Path(path){
   return this
 }
 
+Path.prototype.getRecurArray = function(options){
+  options = options || {}
+  options.recursive = true
+  options.sync = false
+  options.shortName = 'relative'
+  return nodeDir.promiseFiles(this.path, 'combine', options)
+}
+
+Path.prototype.getRecurPathReport = function(options){
+  options = options || {}
+  options.recursive = true
+  options.sync = false
+  options.shortName = 'relative'
+  return nodeDir.promiseFiles(this.path, 'all', options)
+}
+
+/** overwrites files */
+Path.prototype.copyTo = function(pathTo){
+  const WriteTo = new Path(pathTo)
+  const writeTo = WriteTo.path//incase is path object
+  
+  return WriteTo.param()
+  .then( ()=>this.getRecurPathReport() )
+  .then(report=>copyToByRecurReport(this.path, writeTo, report))
+}
+
+function copyToByRecurReport(from, writeTo, report){
+  return ack.promise()
+  .map(report.dirs,item=>{
+    const copyTo = path.join(writeTo, item)
+    const copyFrom = path.join(from,item)
+    const NewPath = new Path( path.join(writeTo,item) )
+    return NewPath.param().catch('EEXIST',e=>null)
+  })
+  .map(report.files, item=>{
+    const copyTo = path.join(writeTo, item)
+    const copyFrom = path.join(from, item)
+    const NewFile = new Path(copyTo).file()
+    return new Path(copyFrom).file().read().then(buff=>NewFile.write(buff))
+  })
+}
+
 Path.prototype.rename = function(newname){
   const nPath = this.Join('../', newname).path
 
@@ -330,7 +372,7 @@ Path.prototype.fileSearchUp = function(fileName){
 */
 Path.prototype.recurFilePath = function(eachCall, options, after){
   options = options ? options : {}
-  options.NON_RECURSIVE=false
+  options.recursive = true
   return this.eachFilePath(eachCall, options, after)
 }
 
@@ -362,7 +404,7 @@ Path.prototype.eachPath = function(eachCall, options, after){
   @eachCall:function(String:path, Number:index)
   @options: (afterFunction ||
     {
-      NON_RECURSIVE:true,
+      recursive:true,
       INCLUDE_DIRECTORIES:true,
       INCLUDE_HIDDEN:true,
       after:function,
@@ -539,19 +581,26 @@ PathSync.prototype.getSubDirNameArray = function(){
 }
 
 /** overwrites */
-PathSync.prototype.copyTo = function(writeTo){
+PathSync.prototype.copyTo = function(pathTo){
+  const WriteTo = new Path(pathTo)
+  const writeTo = WriteTo.path//incase is path object
+  
   try{
     fs.mkdirSync(writeTo)
-  }catch(e){}
+  }catch(e){
+    if(!e.code || e.code!='EEXIST'){
+      throw e
+    }
+  }
 
   const array = this.getRecurArray()
 
   for(let x=array.length-1; x >= 0; --x){
     let item = array[x]
-    const copyTo = path.join(writeTo, item)
-    const copyFrom = path.join(this.path,item)
-
-    const isDir = new Path(this.path).join(item).sync().isDirectory()
+    let copyTo = path.join(writeTo, item)
+    let copyFrom = path.join(this.path,item)
+    let CopyFrom = new Path(this.path).join(item)
+    let isDir = CopyFrom.sync().isDirectory()
 
     if(isDir){
       let newPath = path.join(writeTo,item)
@@ -579,7 +628,7 @@ PathSync.prototype.getArray = function(options){
   */
 
   options.recursive = options.recursive==null ? false : options.recursive
-  options.shortName = options.shortName==null ? true : options.shortName
+  options.shortName = options.shortName==null ? 'relative' : options.shortName
   //options.combine = options.combine==null ? true : options.combine
   options.sync = true
 
@@ -589,17 +638,17 @@ PathSync.prototype.getArray = function(options){
 
 PathSync.prototype.getRecurArray = function(options){
   options = options || {}
-  options.NON_RECURSIVE = false
   options.recursive = true
   options.sync = true
+  options.shortName = 'relative'
+  return nodeDir.files(this.path, 'combine', null, options)
+}
 
-  /*
-  var opsNum = Path.castReadOps(options)
-    ,filter = Path.getFilterByReadOps(options)
-  */
-
+PathSync.prototype.getRecurPathReport = function(options){
+  options = options || {}
+  options.recursive = true
+  options.sync = true
   return nodeDir.files(this.path, 'all', null, options)
-  //return readDir.readSync(this.path, filter, opsNum)
 }
 
 /** file/path looper.
@@ -648,7 +697,7 @@ PathSync.prototype.map = function(eachCall, options){
 
 PathSync.prototype.recur = function(eachCall, options){
   options = options ? options : {}
-  options.NON_RECURSIVE=false
+  options.recursive = true
   return this.each(eachCall, options)
 }
 
@@ -657,7 +706,6 @@ PathSync.prototype.recur = function(eachCall, options){
 */
 PathSync.prototype.recurMap = function(eachCall, options){
   options = options ? options : {}
-  options.NON_RECURSIVE = false
   options.recursive = true
   return this.map(eachCall, options)
 }
@@ -763,26 +811,6 @@ function SearchUpPath(Path){
   this.Path = Path
   return this
 }
-/*
-jC(SearchUpPath)({
-   Ext           : {
-            preset:function(v){
-              return v.replace(/^(.+)?\./,'')
-            }
-          }
-  ,IndexFileName : {
-            preset:function(v){
-              if(v.search(/([^\/\\]+)?\.[^.]+$/) > 1){
-                this.setExt(v)
-              }
-              return v.replace(/^(.+)?(\\|\/)/,'').replace(/\.([^.]+)?/,'')//replace(no opening slashes) . replace(any extension)
-            }
-          }
-  ,Success       : {setAka:'success'}
-  ,RollUpWith    : {setAka:'rollUpWith'}
-  ,Fail          : {setAka:'fail'}
-})
-*/
 
 SearchUpPath.prototype.setExt = function(ext){
   this.ext = ext.replace(/^(.+)?\./,'');return this;
