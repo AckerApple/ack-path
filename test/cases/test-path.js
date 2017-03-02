@@ -149,8 +149,7 @@ describe('ack.path',function(){
 
 	it('#eachSubDirName',function(done){
 		var ackFound = false
-		ack.path(tarDir)
-		.new.join('../').eachSubDir(function(Path,i){
+		ack.path(tarDir).Join('../').eachSubDir(function(Path,i){
 			assert.equal(Path.sync().exists(),true)
 			if(Path.sync().exists('index.js')){
 				ackFound=true

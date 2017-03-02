@@ -5,6 +5,8 @@ All notable changes to this project will be documented here.
 ### Breaking Change
 - discovered recurFilePath and eachFilePath were not respecting to return files only
 - In general, any functionality that only searched for files or only folders was working incorrectly
+- Removed Path.new - use Path.Join() with no arguments
+- Removed Path.string - user Path.String()
 
 ## [1.4.0] - 2017-02-08
 ### Breaking Change

@@ -11,12 +11,21 @@ var fs = require('fs')
 //,jC = require('jC')
 
 var Path = function Path(path){
+  this.path = path
   //this.path = path && path.constructor==Path ? path.path : path
   //this.path = path && path.path ? path.path : path
-  this.path = path
-  this.new = new NewPath(this)
-  this.string = new PathString(this)
+  //this.new = new NewPath(this)
+  //this.string = new PathString(this)
   return this
+}
+
+Path.getName = function(p){
+  p = p.replace(/\\|\/$/g,'')//remove last slash
+  return p.split(/\\|\//).pop()//return last
+}
+
+Path.prototype.String = function(){
+  return new PathString(this)
 }
 
 Path.prototype.getRecurArray = function(options){
@@ -95,27 +104,22 @@ Path.prototype.sync = function(){
   return new PathSync(this.path)
 }
 
-Path.getName = function(p){
-  p = p.replace(/\\|\/$/g,'')//remove last slash
-  return p.split(/\\|\//).pop()//return last
-}
-
 Path.prototype.getName = function(){
-  return Path.getName(this.path)
+  return this.String().getName()
 }
 
 //!Stand alone function, not part of Path Class
 Path.noLastSlash = function(path){
-    return path.replace(/(\/|\\)$/,'')
+  return path.replace(/(\/|\\)$/,'')
 }
 
 Path.prototype.noLastSlash = function(){
-  this.path = this.string.noLastSlash()
+  this.path = this.String().noLastSlash()
   return this
 }
 
 Path.prototype.noFirstSlash = function(){
-  this.path = this.string.noFirstSlash()
+  this.path = this.String().noFirstSlash()
   return this
 }
 
@@ -124,24 +128,25 @@ Path.prototype.up = function(){
 }
 
 Path.prototype.join = function(){
-  this.path = this.string.join.apply(this.string,arguments)
+  var String = this.String()
+  this.path = String.join.apply(String, arguments)
   return this
 }
 
 /** removes the file name from path */
 Path.prototype.removeFile = function(){
-  this.path = this.string.removeFile();
+  this.path = this.String().removeFile();
   return this
 }
 Path.prototype.removeFileName = Path.prototype.removeFile
 
 Path.prototype.removeExt = function(){
-  this.path = this.string.removeExt()
+  this.path = this.String().removeExt()
   return this
 }
 
 Path.prototype.ext = function(ext){
-  this.path = this.string.ext(ext)
+  this.path = this.String().ext(ext)
   return this
 }
 
@@ -161,7 +166,7 @@ Path.prototype.upNext = function(method){
 
   var $this = this
     method.call(this,this,function(){
-    $this.new.join('../').upNext(method)
+    $this.Join('../').upNext(method)
   })
 
   return this
@@ -203,7 +208,7 @@ Path.prototype.isLikeFile = function(){
 Path.prototype.exists = function(cbOrPath,cb){
   var isArg1String = typeof(cbOrPath)=='string'
     ,callb = isArg1String ? cb : cbOrPath
-    ,p = isArg1String ? this.string.join(cbOrPath) : this.path
+    ,p = isArg1String ? this.String().join(cbOrPath) : this.path
     ,t=this
 
   return ack.promise().set(p)
@@ -290,7 +295,7 @@ Path.prototype.deleteDir = function(subPath){
 }
 
 Path.prototype.getSubDirByName = function(subDirName){
-  return this.new.join(subDirName)
+  return this.Join(subDirName)
 }
 
 Path.prototype.getSubDirArray = function(){
@@ -387,7 +392,8 @@ Path.prototype.eachFilePath = function(eachCall, options){
 */
 Path.prototype.eachPath = function(eachCall, options){
   var repeater = function(v,i){
-    return eachCall(this.new.join(v), i)
+    var NewPath = new Path(v)
+    return eachCall(NewPath, i)
   }
   return this.each(repeater, options)
 }
@@ -421,7 +427,6 @@ Path.prototype.each = function(eachCall, options){
 
   options.shortName = options.shortName==null ? false : options.shortName
 
-  var looping;
   var promise = ack.promise()
   //.set(this.path, filter, opsNum)
   //.bind(readDir)
@@ -446,7 +451,7 @@ Path.prototype.each = function(eachCall, options){
   //support deprecated method of filtering
   if(options.filter){
     promise = promise.then(results=>{
-      return results.filter(item=>{
+      var newResults = results.filter(item=>{
         /*
         if(item.substring(item.length-path.sep.length, results.length)==path.sep){
           return true//do not filter directories
@@ -463,6 +468,8 @@ Path.prototype.each = function(eachCall, options){
         }
         return false
       })
+
+      return newResults
     })
   }
   
@@ -474,14 +481,13 @@ Path.prototype.each = function(eachCall, options){
   
   var rtn = []
   promise = promise.each(function(v,i){
-    if(looping!==false){
-      var callres = looping = eachCall.call(this,v,i)
-      if(callres!==false){
-        rtn.push(callres)
-      }
+    var callres = eachCall.call(this,v,i)
+
+    if(callres!==false){
+      rtn.push(callres)
     }
   })
-  .then(()=>rtn)
+  .then(()=>Promise.all(rtn))
 
   return promise
 }
@@ -719,6 +725,10 @@ PathSync.prototype.recurMap = function(eachCall, options){
 var PathString = function PathString(Path){
   this.Path = Path
   return this
+}
+
+PathString.prototype.getName = function(){
+  return Path.getName(this.Path.path)
 }
 
 PathString.prototype.removeFile = function(){
