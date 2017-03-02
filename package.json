@@ -1,6 +1,6 @@
 {
   "name": "ack-path",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Operating system directory functionality",
   "main": "index.js",
   "scripts": {
