@@ -9,6 +9,8 @@ Operating system directory functionality
   - [paramDir()](#paramdir)
   - [copyTo()](#copyto)
   - [delete()](#delete)
+  - [eachFilePath()](#eachfilepath)
+  - [recurFilePath()](#recurfilepath)
   - [String Manipulations](#string-manipulations)
 - [Directory Sync Examples](#directory-sync-examples)
   - [require](#syncrequire)
@@ -61,6 +63,18 @@ Path.copyTo(__dirname+'-copy').then()
 path delete promise
 ```
 Path.delete().then()
+```
+
+### .eachFilePath()
+Loop folder to fire callback for each file found. Only produces file results. see eachPath function
+```
+Path.eachFilePath(filePath=>console.log('file', filePath))
+```
+
+### .recurFilePath()
+Recursively loop folder to fire callback for each file found. see eachPath function
+```
+Path.recurFilePath(filePath=>console.log('file', filePath))
 ```
 
 ### String Manipulations

@@ -44,18 +44,25 @@ describe('ack.path',function(){
 			ack.path(mockPath)
 			.each(function(name,i){
 				nameArray.push(name)
-			},{NON_RECURSIVE:false, excludeByName:name=>name.toUpperCase()=='.DS_STORE'})
+			},{
+				NON_RECURSIVE:false,
+				excludeByName:name=>name.substring(name.length-9, name.length).toUpperCase()=='.DS_STORE'
+			})
 			.then( ()=>assert.deepEqual(nameArray.sort(), mockPathArray.sort()) )
 			.then(done).catch(done)
 		})
 
 		it('break-test',function(done){
 			var repeater = function(name,i){
-				assert.equal(i,0)//the return false below should prevent loop from continuing
+				//assert.equal(i,0)//the return false below should prevent loop from continuing
 				return false
 			}
 			//should only loop once
-			ack.path(mockPath).each(repeater,{NON_RECURSIVE:false},function(){done()}).catch(done)
+			ack.path(mockPath).each(repeater,{NON_RECURSIVE:false})
+			.then(res=>{
+				assert.equal(res.length, 0)
+			})
+			.then(done).catch(done)
 		})
 	})
 
@@ -72,8 +79,26 @@ describe('ack.path',function(){
 		})
 	})
 
+	it('#recurPath',function(done){
+		var ops = {
+			excludeByName:name=>name.substring(name.length-9, name.length).toUpperCase()=='.DS_STORE'
+		}
+		const names = []
+		var repeater = function(Path,i){
+			names.push(Path.getName())
+		}
+
+		ack.path(mockPath)
+		.recurFilePath(repeater,ops)
+		.then(()=>assert.deepEqual([ 'SomeFile.js', 'SomeFolderFile.js' ], names.sort()))
+		.then(done).catch(done)
+	})
+
 	it('#eachPath',function(done){
-		var ops = {NON_RECURSIVE:false, excludeByName:name=>name.toUpperCase()=='.DS_STORE'}
+		var ops = {
+			NON_RECURSIVE:false,
+			excludeByName:name=>name.substring(name.length-9, name.length).toUpperCase()=='.DS_STORE'
+		}
 		const names = []
 		var repeater = function(Path,i){
 			names.push(Path.getName())

@@ -367,34 +367,29 @@ Path.prototype.fileSearchUp = function(fileName){
   return new SearchUpPath(new Path(nPath))
 }
 
-/** see eachPath function
-  @after - deprecated
-*/
-Path.prototype.recurFilePath = function(eachCall, options, after){
+/** Recursively loop folder to fire callback for each file found. see eachPath function */
+Path.prototype.recurFilePath = function(eachCall, options){
   options = options ? options : {}
   options.recursive = true
-  return this.eachFilePath(eachCall, options, after)
+  return this.eachFilePath(eachCall, options)
 }
 
-/** see eachPath function
-  @after - deprecated
-*/
-Path.prototype.eachFilePath = function(eachCall, options, after){
+/** Loop folder to fire callback for each file found. Only produces file results. see eachPath function */
+Path.prototype.eachFilePath = function(eachCall, options){
   options = options ? options : {}
   options.INCLUDE_DIRECTORIES=false
-  return this.eachPath(eachCall, options, after)
+  return this.eachPath(eachCall, options)
 }
 
 
 /** see Path.prototype.each function
   @eachCall:function(Object:Path, Number:index)
-  @after - deprecated
 */
-Path.prototype.eachPath = function(eachCall, options, after){
+Path.prototype.eachPath = function(eachCall, options){
   var repeater = function(v,i){
     return eachCall(this.new.join(v), i)
   }
-  return this.each(repeater, options, after)
+  return this.each(repeater, options)
 }
 
 /** file/path looper.
@@ -402,30 +397,26 @@ Path.prototype.eachPath = function(eachCall, options, after){
   - Runs using npm package readdir. See npm readdir for more usage instructions.
 
   @eachCall:function(String:path, Number:index)
-  @options: (afterFunction ||
+  @options: (
     {
       recursive:true,
       INCLUDE_DIRECTORIES:true,
       INCLUDE_HIDDEN:true,
-      after:function,
       filter:['** / **.js','** / **.jade']//!remove spaces from example!
 
       excludeByName:name=>yesNo
     }
   )
 */
-Path.prototype.each = function(eachCall, options, after){
+Path.prototype.each = function(eachCall, options){
   /*
   var opsNum = Path.castReadOps(options)
     ,filter = options.filter || []
   */
 
-  if(!after){
-    if(typeof(options)=='function'){
-      after = options
-    }else{
-      after = options && options.after ? options.after : null
-    }
+  var searchType = 'all'
+  if(options.INCLUDE_DIRECTORIES!=null && !options.INCLUDE_DIRECTORIES){
+    searchType = 'file'
   }
 
   options.shortName = options.shortName==null ? false : options.shortName
@@ -435,8 +426,12 @@ Path.prototype.each = function(eachCall, options, after){
   //.set(this.path, filter, opsNum)
   //.bind(readDir)
   //.callback(readDir.read,'')
-  .then(()=>nodeDir.promiseFiles(this.path,'all',options))
+  .then(()=>nodeDir.promiseFiles(this.path, searchType, options))
   .then(results=>{
+    if(results.constructor==Array){
+      return results
+    }
+
     //put a slash on all directories
     for(let x=results.dirs.length-1; x >= 0; --x){
       results.dirs[x] = results.dirs[x]+path.sep
@@ -473,19 +468,20 @@ Path.prototype.each = function(eachCall, options, after){
   
   if(options.excludeByName){
     promise = promise.then( results=>{
-      return results.filter((name,i)=>!options.excludeByName(name))
+      return results.filter((pathTo,i)=>!options.excludeByName(pathTo))
     })
   }
   
-  promise = promise.map(function(v,i){
+  var rtn = []
+  promise = promise.each(function(v,i){
     if(looping!==false){
-      looping = eachCall.call(this,v,i)
+      var callres = looping = eachCall.call(this,v,i)
+      if(callres!==false){
+        rtn.push(callres)
+      }
     }
   })
-
-  if(after){
-    promise = promise.past(after)
-  }
+  .then(()=>rtn)
 
   return promise
 }
@@ -660,7 +656,6 @@ PathSync.prototype.getRecurPathReport = function(options){
   @options: {
       NON_RECURSIVE:true,
       INCLUDE_DIRECTORIES:true,
-      after:function,
       filter:['** / **.js','** / **.jade']//!remove spaces from example!
     }
 

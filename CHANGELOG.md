@@ -1,6 +1,11 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.5.0] - 2017-03-02
+### Breaking Change
+- discovered recurFilePath and eachFilePath were not respecting to return files only
+- In general, any functionality that only searched for files or only folders was working incorrectly
+
 ## [1.4.0] - 2017-02-08
 ### Breaking Change
 - .getArray() and .getRecurArray() both were not returning an actual array, now they do
