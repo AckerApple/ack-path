@@ -1,6 +1,9 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.5.2] - 2017-03-17
+- docs and better names. old names still supported
+
 ## [1.5.0] - 2017-03-02
 ### Breaking Change
 - discovered recurFilePath and eachFilePath were not respecting to return files only

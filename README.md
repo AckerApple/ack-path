@@ -9,9 +9,14 @@ Operating system directory functionality
   - [paramDir()](#paramdir)
   - [copyTo()](#copyto)
   - [delete()](#delete)
+  - [each()](#each)
   - [eachFilePath()](#eachfilepath)
-  - [recurFilePath()](#recurfilepath)
+  - [recur()](#recur)
+  - [recurFiles()](#recurfiles)
   - [String Manipulations](#string-manipulations)
+  - [isDirectory](#isdirectory)
+  - [isFile](#isfile)
+  - [isLikeFile](#islikefile)
 - [Directory Sync Examples](#directory-sync-examples)
   - [require](#syncrequire)
   - [dirExists()](#syncdirexists)
@@ -65,16 +70,40 @@ path delete promise
 Path.delete().then()
 ```
 
+### .each()
+file and folder looper
+
+- Based on options, you can recursively read directories and/or files. returns promise
+- Runs using npm package readdir. See npm readdir for more usage instructions.
+- Arguments
+  - eachCall function(String:path, Number:index)
+  - options
+    - recursive : true
+    - INCLUDE_DIRECTORIES : true
+    - INCLUDE_HIDDEN : true
+    - filter : ['**/**.js','**/**.jade']
+    - excludeByName : name=>yesNo
+```
+Path.each( itemStringPath=>itemStringPath ).then( itemPathArray=>console.log(itemPathArray) )
+```
+
+
 ### .eachFilePath()
 Loop folder to fire callback for each file found. Only produces file results. see eachPath function
 ```
-Path.eachFilePath(filePath=>console.log('file', filePath))
+Path.eachFilePath( fileStringPath=>fileStringPath ).then( filePathArray=>console.log(filePathArray) )
 ```
 
-### .recurFilePath()
-Recursively loop folder to fire callback for each file found. see eachPath function
+### recur
+Recursively loop folder to fire callback for each item found. See eachPath function
 ```
-Path.recurFilePath(filePath=>console.log('file', filePath))
+Path.recur(itemPath=>console.log('string path',itemPath))
+```
+
+### .recurFiles()
+Recursively loop folder to fire callback for each file found. See eachPath function
+```
+Path.recurFiles(filePath=>console.log('file', filePath))
 ```
 
 ### String Manipulations
@@ -83,6 +112,24 @@ var PathTest = require('ack-path')('/test/file.js')
 
 PathTest.removeExt().path == "/test/file"
 PathTest.removeFile().path == "/test/"
+```
+
+### isDirectory
+hard-checks file system if item is a folder
+```
+require('ack-path')('/test/file.js').isDirectory().then(res=>res==false)
+```
+
+### isFile
+hard-checks file system if item is a file
+```
+require('ack-path')('/test/file.js').isFile().then(res=>res==true)
+```
+
+### isLikeFile
+hard-checks file system if item is a file
+```
+require('ack-path')('/test/file.js').isLikeFile() == true
 ```
 
 ## SYNC Examples

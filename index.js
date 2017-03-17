@@ -190,6 +190,7 @@ Path.prototype.isDirectory = function(){
   return Path.isDirectory(this.path)
 }
 
+/** hard-checks file system if item is a file */
 Path.prototype.isFile = function(){
   return ack.promise().bind(fs)
   .set(this.path)
@@ -373,11 +374,12 @@ Path.prototype.fileSearchUp = function(fileName){
 }
 
 /** Recursively loop folder to fire callback for each file found. see eachPath function */
-Path.prototype.recurFilePath = function(eachCall, options){
+Path.prototype.recurFiles = function(eachCall, options){
   options = options ? options : {}
   options.recursive = true
   return this.eachFilePath(eachCall, options)
 }
+Path.prototype.recurFilePath = Path.prototype.recurFiles//deprecated name
 
 /** Loop folder to fire callback for each file found. Only produces file results. see eachPath function */
 Path.prototype.eachFilePath = function(eachCall, options){
