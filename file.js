@@ -105,6 +105,13 @@ File.prototype.write = function(output){
   return ack.promise().set(this.path,output).callback(fs.writeFile)//.then(function(){return this},this)
 }
 
+/** just like write but if file already exists, no error will be thrown */
+File.prototype.param = function(output){
+  return ack.promise()
+  .set(this.path,output)
+  .callback(fs.writeFile)//.then(function(){return this},this)
+  .catch('ENOENT',function(){})
+}
 
 File.prototype.delete = function(){
   return ack.promise().set(this.path).callback(function(r, callback){

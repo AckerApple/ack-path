@@ -28,6 +28,7 @@ Operating system directory functionality
 - [File Functionality](#file-functionality)
   - [require](#requirefile)
   - [delete()](#file.delete)
+  - [param()](#param)
   - [getMimeType()](#filegetmimetype)
   - [stat()](#filestat)
   - [write()](#filewrite)
@@ -208,6 +209,12 @@ File.stat().then(stats=>stats.size)
 ### .file().write()
 ```javascript
 File.write(string).then()
+```
+
+### .file().param()
+just like write but if file already exists, no error will be thrown
+```javascript
+File.param(string).then()
 ```
 
 ### .file().append()

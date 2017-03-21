@@ -1,11 +1,12 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
-## [1.5.4] - 2017-03-21
+## [1.5.6] - 2017-03-21
 ### Improved
 - rename
 ### Added
 - moveTo
+- File().param(output)
 
 ## [1.5.2] - 2017-03-17
 - docs and better names. old names still supported
