@@ -38,49 +38,55 @@ Operating system directory functionality
 ## Directory Functionality
 
 ### require
-```
+```javascript
 var Path = require('ack-path')(__dirname)
 var stringPath = Path.path
 ```
 
 ### .join()
 write file promise
-```
+```javascript
 Path.join('file-name.js').writeFile(string).then().catch()
 ```
 
 ### .param()
 Create directory if not existant. Does not take into condsideration if path is actually a file (file path will be created as a folder)
-```
+```javascript
 Path.param().then()
 ```
 
 ### .paramDir()
 Create directory if not existant. Takes condsideration if path is actually a file and only creates folder pathing
-```
+```javascript
 Path.paramDir().then()
 ```
 
 ### .copyTo()
-```
+```javascript
 Path.copyTo(__dirname+'-copy').then()
 ```
 
 ### .moveTo()
 move entire directory or single file
+```javascript
+Path.moveTo( newPath:string, overwrite:boolean ).then()
 ```
+```javascript
 Path.moveTo(__dirname+'-moved').then()
 ```
 
 ### .rename()
 in-place rename directory or single file
+```javascript
+Path.rename( newName:string, overwrite:boolean ).then()
 ```
-Path.rename('new-item-name').then()
+```javascript
+Path.rename('new-item-name', true).then()
 ```
 
 ### .delete()
 path delete promise
-```
+```javascript
 Path.delete().then()
 ```
 
@@ -97,31 +103,31 @@ file and folder looper
     - INCLUDE_HIDDEN : true
     - filter : ['**/**.js','**/**.jade']
     - excludeByName : name=>yesNo
-```
+```javascript
 Path.each( itemStringPath=>itemStringPath ).then( itemPathArray=>console.log(itemPathArray) )
 ```
 
 
 ### .eachFilePath()
 Loop folder to fire callback for each file found. Only produces file results. see eachPath function
-```
+```javascript
 Path.eachFilePath( fileStringPath=>fileStringPath ).then( filePathArray=>console.log(filePathArray) )
 ```
 
 ### recur
 Recursively loop folder to fire callback for each item found. See eachPath function
-```
+```javascript
 Path.recur( ItemPath=>ItemPath.path ).then( pathStringArray=>console.log(pathStringArray) )
 ```
 
 ### .recurFiles()
 Recursively loop folder to fire callback for each file found. See eachPath function
-```
+```javascript
 Path.recurFiles( filePath=>console.log('file', filePath) )
 ```
 
 ### String Manipulations
-```
+```javascript
 var PathTest = require('ack-path')('/test/file.js')
 
 PathTest.removeExt().path == "/test/file"
@@ -130,48 +136,48 @@ PathTest.removeFile().path == "/test/"
 
 ### isDirectory
 hard-checks file system if item is a folder
-```
+```javascript
 require('ack-path')('/test/file.js').isDirectory().then(res=>res==false)
 ```
 
 ### isFile
 hard-checks file system if item is a file
-```
+```javascript
 require('ack-path')('/test/file.js').isFile().then(res=>res==true)
 ```
 
 ### isLikeFile
 Checks string for a file extension
-```
+```javascript
 require('ack-path')('/test/file.js').isLikeFile() == true
 ```
 
 ## SYNC Examples
 
 ### .sync().require
-```
+```javascript
 var PathSync = require('ack-path')(__dirname).sync()
 var pathTo = PathSync.path
 ```
 
 ### .sync().dirExists()
 considers if path is actually a file
-```
+```javascript
 PathSync.dirExists()
 ```
 
 ### .sync().exists()
-```
+```javascript
 PathSync.exists()
 ```
 
 ### .sync().delete()
-```
+```javascript
 PathSync.delete()
 ```
 
 ### .sync().copyTo()
-```
+```javascript
 PathSync.copyTo()
 ```
 
@@ -179,37 +185,37 @@ PathSync.copyTo()
 A more file specific set of objective functionality
 
 ### require.file
-```
+```javascript
 var File = require('ack-path')(__dirname).file('file-name.js')
 var filePath = File.path
 ```
 
 ### .file().delete()
-```
+```javascript
 File.delete().then()
 ```
 
 ### .file().getMimeType()
-```
+```javascript
 File.getMimeType()//Ex: application/javascript
 ```
 
 ### .file().stat()
-```
+```javascript
 File.stat().then(stats=>stats.size)
 ```
 
 ### .file().write()
-```
+```javascript
 File.write(string).then()
 ```
 
 ### .file().append()
-```
+```javascript
 File.append(string).then()
 ```
 
 ### .file().readJson()
-```
+```javascript
 File.readJson().then()
 ```
