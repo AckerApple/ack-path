@@ -8,6 +8,8 @@ Operating system directory functionality
   - [param()](#param)
   - [paramDir()](#paramdir)
   - [copyTo()](#copyto)
+  - [moveTo()](#moveto)
+  - [rename()](#rename)
   - [delete()](#delete)
   - [each()](#each)
   - [eachFilePath()](#eachfilepath)
@@ -64,6 +66,18 @@ Path.paramDir().then()
 Path.copyTo(__dirname+'-copy').then()
 ```
 
+### .moveTo()
+move entire directory or single file
+```
+Path.moveTo(__dirname+'-moved').then()
+```
+
+### .rename()
+in-place rename directory or single file
+```
+Path.rename('new-item-name').then()
+```
+
 ### .delete()
 path delete promise
 ```
@@ -97,13 +111,13 @@ Path.eachFilePath( fileStringPath=>fileStringPath ).then( filePathArray=>console
 ### recur
 Recursively loop folder to fire callback for each item found. See eachPath function
 ```
-Path.recur(itemPath=>console.log('string path',itemPath))
+Path.recur( ItemPath=>ItemPath.path ).then( pathStringArray=>console.log(pathStringArray) )
 ```
 
 ### .recurFiles()
 Recursively loop folder to fire callback for each file found. See eachPath function
 ```
-Path.recurFiles(filePath=>console.log('file', filePath))
+Path.recurFiles( filePath=>console.log('file', filePath) )
 ```
 
 ### String Manipulations
@@ -127,7 +141,7 @@ require('ack-path')('/test/file.js').isFile().then(res=>res==true)
 ```
 
 ### isLikeFile
-hard-checks file system if item is a file
+Checks string for a file extension
 ```
 require('ack-path')('/test/file.js').isLikeFile() == true
 ```

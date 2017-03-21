@@ -2,13 +2,11 @@
 var fs = require('fs')
   ,path = require('path')
   ,ack = require('ack-x')
-  //,nodeDir = require('node-dir')
   ,nodeDir = require('node-dir')//consider replacing with "readdirp"
-  //,readDir = require('readdir')//consider replacing with "readdirp"
   ,weave = require('./weave')
   ,mkdirp = require('mkdirp')//recursive create directories
   ,rimraf = require('rimraf')//recursive delete directories
-//,jC = require('jC')
+  ,mv = require('mv')//recursive delete directories
 
 var Path = function Path(path){
   this.path = path
@@ -70,13 +68,30 @@ function copyToByRecurReport(from, writeTo, report){
   })
 }
 
-Path.prototype.rename = function(newname){
-  const nPath = this.Join('../', newname).path
+/** move entire directory or single file */
+Path.prototype.moveTo = function(newPath, overwrite){
+  const NewPath = new Path(newPath)
 
   return ack.promise()
   .bind(this)
+  .if(()=>overwrite,()=>NewPath.delete())
+  .catch('ENOENT',e=>null)
   .callback(function(cb){
-    return fs.rename(this.path,nPath,cb)
+    return mv(this.path, NewPath.path, cb)
+    //return fs.rename(this.path,nPath,cb)
+  })
+}
+
+/** in-place rename directory or single file */
+Path.prototype.rename = function(newname, overwrite){
+  const NewPath = this.Join('../', newname)
+  return ack.promise()
+  .bind(this)
+  .if(()=>overwrite,()=>NewPath.delete())
+  .catch('ENOENT',e=>null)
+  .callback(function(cb){
+    return mv(this.path, NewPath.path, cb)
+    //return fs.rename(this.path,NewPath.path,cb)
   })
 }
 

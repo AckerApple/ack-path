@@ -241,21 +241,18 @@ describe('ack.path',function(){
 		})
 	})
 
-	it('#isDirectory',(done)=>
+	it('#isDirectory',()=>
 		ack.path(assestsPath)
 		.isDirectory()
 		.then(yesNo=>{
 			assert.equal(yesNo,true)
 		})
-		.then(done).catch(done)
 	)
 
-	it('#getRecurArray',()=>{
-		return ack.path(assestsPath).getRecurArray()
-		.then(array=>{
-			assert.equal(array.constructor, Array)
-		})
-	})
+	it('#getRecurArray',()=>
+		ack.path(assestsPath).getRecurArray()
+		.then( array=>assert.equal(array.constructor, Array) )
+	)
 
 	it('#copyTo',function(){
 		const copyTo = path.join(assestsPath,'../','assets2')
@@ -263,10 +260,34 @@ describe('ack.path',function(){
 		.then(()=>{		
 			const NewPath = ack.path(copyTo).sync()
 			assert.equal(NewPath.exists(), true)
-/*
 			NewPath.delete()
 			assert.equal(NewPath.exists(), false)
-*/
+		})
+	})
+
+	it('#moveTo',function(){
+		const copyTo = path.join(assestsPath,'../','assets2')
+		const moveTo = path.join(assestsPath,'../','assets3')
+		return ack.path(assestsPath).copyTo( copyTo )
+		.then( ()=>ack.path(copyTo).moveTo(moveTo, true) )
+		.then(()=>{
+			const NewPath = ack.path(moveTo).sync()
+			assert.equal(NewPath.exists(), true)
+			NewPath.delete()
+			assert.equal(NewPath.exists(), false)
+		})
+	})
+
+	it('#rename',function(){
+		const copyTo = path.join(assestsPath,'../','assets2')
+		const renameTo = 'assets3'
+		return ack.path(assestsPath).copyTo( copyTo )
+		.then( ()=>ack.path(copyTo).rename(renameTo, true) )
+		.then(()=>{
+			const NewPath = ack.path(copyTo).join('../','assets3').sync()
+			assert.equal(NewPath.exists(), true)
+			NewPath.delete()
+			assert.equal(NewPath.exists(), false)
 		})
 	})
 })
