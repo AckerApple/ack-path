@@ -15,10 +15,11 @@ Operating system directory functionality
   - [eachFilePath()](#eachfilepath)
   - [recur()](#recur)
   - [recurFiles()](#recurfiles)
-  - [String Manipulations](#string-manipulations)
+- [String Manipulations](#string-manipulations)
   - [isDirectory](#isdirectory)
   - [isFile](#isfile)
   - [isLikeFile](#islikefile)
+  - [getLastName](#getlastname)
 - [Directory Sync Examples](#directory-sync-examples)
   - [require](#syncrequire)
   - [dirExists()](#syncdirexists)
@@ -151,6 +152,13 @@ require('ack-path')('/test/file.js').isFile().then(res=>res==true)
 Checks string for a file extension
 ```javascript
 require('ack-path')('/test/file.js').isLikeFile() == true
+```
+
+### getLastName
+Returns item after last slash
+```javascript
+require('ack-path')('/test/file.js').getLastName() == 'file.js'
+require('ack-path')('/test/folder/').getLastName() == 'folder'
 ```
 
 ## SYNC Examples

@@ -1,6 +1,12 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.5.7] - 2017-03-22
+### Added
+- init ack-path checks constructor of ack-path when performing ackPath( AckPath ) instead of required ackPath( AckPath.path )
+- alias getLastName for getName
+- ack-p file reference of ack-path/ack-p.js
+
 ## [1.5.6] - 2017-03-21
 ### Improved
 - rename
