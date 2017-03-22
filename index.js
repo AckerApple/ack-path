@@ -8,9 +8,9 @@ var fs = require('fs')
   ,rimraf = require('rimraf')//recursive delete directories
   ,mv = require('mv')//recursive delete directories
 
-var Path = function Path(path){
-  this.path = path
-  //this.path = path && path.constructor==Path ? path.path : path
+function Path(path){
+  //this.path = path
+  this.path = path && path.constructor==Path ? path.path : path
   //this.path = path && path.path ? path.path : path
   //this.new = new NewPath(this)
   //this.string = new PathString(this)
@@ -119,9 +119,10 @@ Path.prototype.sync = function(){
   return new PathSync(this.path)
 }
 
-Path.prototype.getName = function(){
+Path.prototype.getLastName = function(){
   return this.String().getName()
 }
+Path.prototype.getName = Path.prototype.getLastName
 
 //!Stand alone function, not part of Path Class
 Path.noLastSlash = function(path){
@@ -744,9 +745,10 @@ var PathString = function PathString(Path){
   return this
 }
 
-PathString.prototype.getName = function(){
+PathString.prototype.getLastName = function(){
   return Path.getName(this.Path.path)
 }
+PathString.prototype.getName = PathString.prototype.getLastName
 
 PathString.prototype.removeFile = function(){
   return this.Path.path.replace(/[^/\\]+\.[^.\/]+$/,'')
