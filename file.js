@@ -6,8 +6,17 @@ var fs = require('fs'),
   mime = require('mime')
 
 var File = function(path){
-  this.path = path
+  this.path = path && path.constructor==File ? path.path : path
   return this
+}
+
+/** returns promise of File object that is targeted at created copy  */
+File.prototype.copyTo = function(pathTo){
+  const WriteTo = new File(pathTo)
+  const writeTo = WriteTo.path//incase is path object
+
+  return copyFile(this.path, writeTo)
+  .then( ()=>WriteTo )
 }
 
 /** Manipulates path by removing one file extension. Returns self */
@@ -163,3 +172,29 @@ FileSync.prototype.readJson = function(){
 
 module.exports = function(path){return new File(path)}
 module.exports.Class = File
+
+
+
+
+
+
+
+
+function copyFile(source, target, cb) {
+  return new Promise(function(res,rej){
+    var cbCalled = false;
+
+    var rd = fs.createReadStream(source);
+    rd.on("error", function(err) {
+      rej(err);
+    });
+    var wr = fs.createWriteStream(target);
+    wr.on("error", function(err) {
+      rej(err);
+    });
+    wr.on("close", function(ex) {
+      res();
+    });
+    rd.pipe(wr);
+  })
+}

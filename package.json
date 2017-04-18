@@ -1,11 +1,17 @@
 {
   "name": "ack-path",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "Operating system directory functionality",
   "main": "index.js",
   "scripts": {
     "test": "mocha ./test/cases --recursive",
-    "test:watch": "mocha ./test/cases --recursive --watch"
+    "test:watch": "mocha ./test/cases --recursive --watch",
+    "test:copy": "npm run test:copy:file && npm run test:copy:folder",
+    "test:copy:file": "node ./bin/cli.js copy node_modules/ack-p/package.json node_modules/ack-p/package2.json",
+    "test:copy:folder": "node ./bin/cli.js copy node_modules/ack-p node_modules/ack-p2"
+  },
+  "bin": {
+    "ack-path": "./bin/cli.js"
   },
   "repository": {
     "type": "git",

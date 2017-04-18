@@ -2,6 +2,8 @@
 Operating system directory functionality
 
 ### Table of Contents
+- [Commands](#commands)
+  - [copy](#copy)
 - [Directory Functionality](#directory-functionality)
   - [require](#require)
   - [join()](#join)
@@ -35,6 +37,30 @@ Operating system directory functionality
   - [write()](#filewrite)
   - [append()](#fileappend)
   - [readJson()](#filereadjson)
+
+## Commands
+Timesaver script commands
+
+### How to Use
+Using the most basic command as an example, you can invoke the copy command, using any of the following methods:
+
+relative command
+```bash
+./node_modules/bin/ack-path copy ./relativeFrom ./relativeTo
+```
+
+package.json script
+```javascript
+"scripts":{
+  "copy": "ack-path copy ./relativeFrom ./relativeTo"
+}
+```
+
+### Copy
+
+```bash
+ack-path copy ./relativeFrom ./relativeTo
+```
 
 
 ## Directory Functionality
