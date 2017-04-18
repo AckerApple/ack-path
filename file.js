@@ -2,7 +2,7 @@
 var fs = require('fs'),
   nodePath = require('path'),
   ack = require('ack-x'),
-  weave = require('./weave'),
+  weave = require('./weave'),//contains access to ack.path
   mime = require('mime')
 
 var File = function(path){
@@ -14,9 +14,13 @@ var File = function(path){
 File.prototype.copyTo = function(pathTo){
   const WriteTo = new File(pathTo)
   const writeTo = WriteTo.path//incase is path object
+  const from = this.path
 
-  return copyFile(this.path, writeTo)
-  .then( ()=>WriteTo )
+  return weave.path(writeTo).join('../').param()
+  .then(function(){
+    return copyFile(from, writeTo)
+  })
+  .set(WriteTo)
 }
 
 /** Manipulates path by removing one file extension. Returns self */

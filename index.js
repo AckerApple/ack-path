@@ -3,7 +3,7 @@ var fs = require('fs')
   ,path = require('path')
   ,ack = require('ack-x')
   ,nodeDir = require('node-dir')//consider replacing with "readdirp"
-  ,weave = require('./weave')
+  ,weave = require('./weave')//contains access to ack.file
   ,mkdirp = require('mkdirp')//recursive create directories
   ,rimraf = require('rimraf')//recursive delete directories
   ,mv = require('mv')//recursive delete directories
@@ -48,8 +48,12 @@ Path.prototype.copyTo = function(pathTo){
   const writeTo = WriteTo.path//incase is path object
   
   return WriteTo.param()
-  .then( ()=>this.getRecurPathReport() )
-  .then(report=>copyToByRecurReport(this.path, writeTo, report))
+  .then(function(){
+    return this.getRecurPathReport()
+  }.bind(this))
+  .then(function(report){
+    return copyToByRecurReport(this.path, writeTo, report)
+  }.bind(this))
 }
 
 function copyToByRecurReport(from, writeTo, report){
