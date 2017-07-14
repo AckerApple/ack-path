@@ -174,6 +174,10 @@ FileSync.prototype.readJson = function(){
   return JSON.parse(contents)
 }
 
+FileSync.prototype.readAsString = function(){
+  return this.read().call('toString')
+}
+
 module.exports = function(path){return new File(path)}
 module.exports.Class = File
 

@@ -37,8 +37,19 @@ describe('ack.file',function(){
 		it('#readJson',function(){
 			var jsonPath = path.join(__dirname,'../../package.json')
 			var result = ack.file(jsonPath).sync().readJson()
-
 			assert.equal(result.name, 'ack-path')
+		})
+
+		it('#read',function(){
+			var jsonPath = path.join(__dirname,'../../package.json')
+			var result = ack.file(jsonPath).sync().read()
+			assert.equal(JSON.parse(result.toString()).name, 'ack-path')
+		})
+
+		it('#readAsString',function(){
+			var jsonPath = path.join(__dirname,'../../package.json')
+			var result = ack.file(jsonPath).sync().read()
+			assert.equal(JSON.parse(result).name, 'ack-path')
 		})
 	})
 

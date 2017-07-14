@@ -264,7 +264,9 @@ Path.param = function(folderPath,options){
   })
 }
 
-/** creates folder if not defined. Takes into consideration if defined path is actually a file path */
+/** creates folder if not defined. Takes into consideration if defined path is actually a file path
+  Returns promise with context of this Path
+*/
 Path.prototype.paramDir = function(subPath,options){
   var tarPath = subPath ? path.join(this.path,subPath) : this.path
 

@@ -85,6 +85,9 @@ Path.param().then()
 
 ### .paramDir()
 Create directory if not existant. Takes condsideration if path is actually a file and only creates folder pathing
+
+Returns promise with context of this Path
+
 ```javascript
 Path.paramDir().then()
 ```
