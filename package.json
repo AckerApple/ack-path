@@ -1,7 +1,7 @@
 {
   "name": "ack-path",
-  "version": "1.5.13",
-  "description": "Operating system directory functionality",
+  "version": "1.5.14",
+  "description": "Robust operating system directory functionality",
   "main": "index.js",
   "scripts": {
     "test": "mocha ./test/cases --recursive",
