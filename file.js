@@ -12,9 +12,9 @@ var File = function(path){
 
 /** returns promise of File object that is targeted at created copy  */
 File.prototype.copyTo = function(pathTo){
-  const WriteTo = new File(pathTo)
-  const writeTo = WriteTo.path//incase is path object
-  const from = this.path
+  var WriteTo = new File(pathTo)
+  var writeTo = WriteTo.path//incase is path object
+  var from = this.path
 
   return weave.path(writeTo).join('../').param()
   .then(function(){

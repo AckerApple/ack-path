@@ -24,6 +24,9 @@ describe('ack.path',function(){
 
 	it('#Join',()=>{
 		assert.equal(ack.path('1').Join('2','3').path, path.join('1','2','3'))
+		assert.equal(ack.path('1').Join('2','../').path, path.join('1','2','../'))
+		assert.equal(ack.path('c:\\folder\\file.js').Join('../').path, path.join('c:\\folder\\file.js','../'))
+		
 	})
 
 	it('#removeExt',function(){

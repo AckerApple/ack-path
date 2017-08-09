@@ -18,8 +18,8 @@ function Path(path){
 }
 
 Path.getName = function(p){
-  p = p.replace(/\\|\/$/g,'')//remove last slash
-  return p.split(/\\|\//).pop()//return last
+  var rp = p.replace(/[\\|\/]$/,'')//remove last slash
+  return rp.split(/\\|\//).pop()//return last
 }
 
 Path.prototype.String = function(){
@@ -44,8 +44,8 @@ Path.prototype.getRecurPathReport = function(options){
 
 /** overwrites files */
 Path.prototype.copyTo = function(pathTo){
-  const WriteTo = new Path(pathTo)
-  const writeTo = WriteTo.path//incase is path object
+  var WriteTo = new Path(pathTo)
+  var writeTo = WriteTo.path//incase is path object
   
   return WriteTo.param()
   .then(function(){
@@ -59,22 +59,22 @@ Path.prototype.copyTo = function(pathTo){
 function copyToByRecurReport(from, writeTo, report){
   return ack.promise()
   .map(report.dirs,item=>{
-    const copyTo = path.join(writeTo, item)
-    const copyFrom = path.join(from,item)
-    const NewPath = new Path( path.join(writeTo,item) )
+    var copyTo = path.join(writeTo, item)
+    var copyFrom = path.join(from,item)
+    var NewPath = new Path( path.join(writeTo,item) )
     return NewPath.param().catch('EEXIST',e=>null)
   })
   .map(report.files, item=>{
-    const copyTo = path.join(writeTo, item)
-    const copyFrom = path.join(from, item)
-    const NewFile = new Path(copyTo).file()
+    var copyTo = path.join(writeTo, item)
+    var copyFrom = path.join(from, item)
+    var NewFile = new Path(copyTo).file()
     return new Path(copyFrom).file().read().then(buff=>NewFile.write(buff))
   })
 }
 
 /** move entire directory or single file */
 Path.prototype.moveTo = function(newPath, overwrite){
-  const NewPath = new Path(newPath)
+  var NewPath = new Path(newPath)
 
   return ack.promise()
   .bind(this)
@@ -88,7 +88,7 @@ Path.prototype.moveTo = function(newPath, overwrite){
 
 /** in-place rename directory or single file */
 Path.prototype.rename = function(newname, overwrite){
-  const NewPath = this.Join('../', newname)
+  var NewPath = this.Join('../', newname)
   return ack.promise()
   .bind(this)
   .if(()=>overwrite,()=>NewPath.delete())
@@ -105,7 +105,7 @@ Path.prototype.writeFile = function(output){
 
 /** performs .join but original object remains untouched */
 Path.prototype.Join = function(pathTo, pathToPart2, pathToPart3){
-  const args = Array.prototype.slice.call(arguments)
+  var args = Array.prototype.slice.call(arguments)
   args.unshift(this.path)
   pathTo = path.join.apply(path,args)
   return new Path(pathTo)
@@ -174,7 +174,7 @@ Path.prototype.ext = function(ext){
 Path.prototype.upEach = function(eachMethod){
   return this.upNext(function(Path,next){
       var r = eachMethod(Path)
-      if(r==null || r)next()
+      if(r==null || r)next()//allow called method to break loop
   })
 }
 
@@ -185,8 +185,11 @@ Path.prototype.upNext = function(method){
   }
 
   var $this = this
-    method.call(this,this,function(){
-    $this.Join('../').upNext(method)
+  method.call(this,this,function(){
+    var nextFolder = $this.Join('../')
+    if(nextFolder.path.length!=$this.path.length){//prevent recursion (mostly only needed for windows)
+      nextFolder.upNext(method)
+    }
   })
 
   return this
@@ -342,18 +345,18 @@ Path.prototype.getSubDirNameArray = function(){
   @options - see Path.each method
 */
 Path.prototype.recur = function(callbackOrParentValue, callbackOrOptions, options){
-  const callback = callbackOrOptions || callbackOrParentValue
+  var callback = callbackOrOptions || callbackOrParentValue
   options = options || (callbackOrOptions.constructor==Function?null:callbackOrOptions)
 
-  const eachDir = v=>{
-    const newParentValue = callback.call({quit:'not yet made'},v,callbackOrParentValue,false)
+  var eachDir = v=>{
+    var newParentValue = callback.call({quit:'not yet made'},v,callbackOrParentValue,false)
     return v.recur(newParentValue, callback, options)
   }
 
   return this.eachFilePath( Path=>callback(Path, callbackOrParentValue, true), options )
   .then( ()=>this.getSubDirNameArray() )
   .then( array=>{
-    const promises = []
+    var promises = []
     array.forEach(v=>{
       promises.push( eachDir(this.Join(v)) )
     })
@@ -608,8 +611,8 @@ PathSync.prototype.getSubDirNameArray = function(){
 
 /** overwrites */
 PathSync.prototype.copyTo = function(pathTo){
-  const WriteTo = new Path(pathTo)
-  const writeTo = WriteTo.path//incase is path object
+  var WriteTo = new Path(pathTo)
+  var writeTo = WriteTo.path//incase is path object
   
   try{
     fs.mkdirSync(writeTo)
@@ -619,7 +622,7 @@ PathSync.prototype.copyTo = function(pathTo){
     }
   }
 
-  const array = this.getRecurArray()
+  var array = this.getRecurArray()
 
   for(let x=array.length-1; x >= 0; --x){
     let item = array[x]
@@ -638,7 +641,7 @@ PathSync.prototype.copyTo = function(pathTo){
         }
       }
     }else{
-      const copy = fs.readFileSync(copyFrom)
+      var copy = fs.readFileSync(copyFrom)
       fs.writeFileSync(copyTo, copy)
     }
   }
