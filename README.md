@@ -1,4 +1,8 @@
 # ack-path
+[![build status](https://travis-ci.org/AckerApple/ack-path.svg)](http://travis-ci.org/AckerApple/ack-path)
+[![Build status](https://ci.appveyor.com/api/projects/status/el8bejrmk83nco60?svg=true)](https://ci.appveyor.com/project/AckerApple/ack-path)
+[![NPM version](https://img.shields.io/npm/v/ack-path.svg?style=flat-square)](https://www.npmjs.com/package/ack-path)
+
 Operating system directory functionality
 
 ### Table of Contents

@@ -2,7 +2,7 @@
 var fs = require('fs')
   ,path = require('path')
   ,ack = require('ack-x')
-  ,nodeDir = require('node-dir')//consider replacing with "readdirp"
+  ,nodeDir = require('path-reader')//consider replacing with "readdirp"
   ,weave = require('./weave')//contains access to ack.file
   ,mkdirp = require('mkdirp')//recursive create directories
   ,rimraf = require('rimraf')//recursive delete directories
