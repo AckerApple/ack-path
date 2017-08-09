@@ -38,8 +38,8 @@ describe('ack.path.sync()',function(){
 	})
 
 	it('#getArray',function(){
-		var mapped = ack.path(assestsPath).sync().getArray({recursive:true})
-		assert.equal(mapped.length, 17)
+		var mapped = ack.path(assestsPath).sync().getArray({recursive:true, excludeHidden:true})
+		assert.equal(mapped.length, 14)
 	})
 
 	it('#recurMap',function(){
