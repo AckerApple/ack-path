@@ -1,2 +1,6 @@
 .git*
 test
+.travis.yml
+.npmignore
+.appveyor.yml
+updaters

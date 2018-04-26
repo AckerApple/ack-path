@@ -1,7 +1,7 @@
 "use strict";
 var fs = require('fs'),
   nodePath = require('path'),
-  ack = require('ack-x'),
+  ack = require('ack-x').ack,
   weave = require('./weave'),//contains access to ack.path
   mime = require('mime')
 
@@ -91,7 +91,7 @@ File.prototype.stat = function(){
 }
 
 File.prototype.getMimeType = function(){
-  return mime.lookup(this.path)
+  return mime.getType(this.path)
 }
 
 File.prototype.read = function(){

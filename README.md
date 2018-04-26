@@ -1,13 +1,21 @@
-# ack-path
-[![build status](https://travis-ci.org/AckerApple/ack-path.svg)](http://travis-ci.org/AckerApple/ack-path)
+[![hire me](https://ackerapple.github.io/resume/assets/images/hire-me-badge.svg)](https://ackerapple.github.io/resume/)
+[![npm downloads](https://img.shields.io/npm/dm/ack-path.svg)](https://npmjs.org/ack-path)
+[![Dependency Status](https://david-dm.org/ackerapple/ack-path.svg)](https://david-dm.org/ackerapple/ack-path)
+[![Build Status](https://secure.travis-ci.org/AckerApple/ack-path.svg)](http://travis-ci.org/AckerApple/ack-path)
 [![Build status](https://ci.appveyor.com/api/projects/status/el8bejrmk83nco60?svg=true)](https://ci.appveyor.com/project/AckerApple/ack-path)
 [![NPM version](https://img.shields.io/npm/v/ack-path.svg?style=flat-square)](https://www.npmjs.com/package/ack-path)
 
 Robust operating system directory functionality
 
-### Table of Contents
-- [Commands](#commands)
+<details>
+  <summary><strong>Table of Contents</strong></summary>
+
+- [Install](#install)
+- [import](#import)
+- [CLI Commands](#cli-commands)
+  - [How to Use](#how-to-use)
   - [copy](#copy)
+  - [move](#move)
 - [Directory Functionality](#directory-functionality)
   - [require](#require)
   - [join()](#join)
@@ -34,7 +42,8 @@ Robust operating system directory functionality
   - [copyTo()](#synccopyTo)
 - [File Functionality](#file-functionality)
   - [require](#requirefile)
-  - [delete()](#file.delete)
+  - [copyTo()](#filecopyto)
+  - [delete()](#filedelete)
   - [param()](#param)
   - [getMimeType()](#filegetmimetype)
   - [stat()](#filestat)
@@ -42,22 +51,38 @@ Robust operating system directory functionality
   - [append()](#fileappend)
   - [readJson()](#filereadjson)
 
-## Commands
+</details>
+
+### Install
+```
+npm install ack-path
+```
+### Import
+How to import this package
+```javascript
+var Path = require('ack-path')(__dirname)
+
+console.log( Path.path === __dirname )//true test
+
+//Now, you can do a whole lot more! Continue reading...
+```
+
+## CLI Commands
 Timesaver script commands
 
 ### How to Use
 Using the most basic command as an example, you can invoke the copy command, using any of the following methods:
 
-relative command
-```bash
-./node_modules/bin/ack-path copy ./relativeFrom ./relativeTo
-```
-
-package.json script
+package.json script example
 ```javascript
 "scripts":{
   "copy": "ack-path copy ./relativeFrom ./relativeTo"
 }
+```
+
+from command terminal example
+```bash
+./node_modules/bin/ack-path copy ./relativeFrom ./relativeTo
 ```
 
 ### Copy
@@ -66,14 +91,14 @@ package.json script
 ack-path copy ./relativeFrom ./relativeTo
 ```
 
+### Move
+
+```bash
+ack-path move ./relativeFrom ./relativeTo
+```
+
 
 ## Directory Functionality
-
-### require
-```javascript
-var Path = require('ack-path')(__dirname)
-var stringPath = Path.path
-```
 
 ### .join()
 write file promise
@@ -223,6 +248,7 @@ PathSync.delete()
 PathSync.copyTo()
 ```
 
+
 ## File Functionality
 A more file specific set of objective functionality
 
@@ -230,6 +256,11 @@ A more file specific set of objective functionality
 ```javascript
 var File = require('ack-path')(__dirname).file('file-name.js')
 var filePath = File.path
+```
+
+### .file().copyTo()
+```javascript
+File.copyTo(__filename+'.copy').then()
 ```
 
 ### .file().delete()

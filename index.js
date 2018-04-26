@@ -1,7 +1,7 @@
 "use strict";
 var fs = require('fs')
   ,path = require('path')
-  ,ack = require('ack-x')
+  ,ack = require('ack-x').ack
   ,nodeDir = require('path-reader')//consider replacing with "readdirp"
   ,weave = require('./weave')//contains access to ack.file
   ,mkdirp = require('mkdirp')//recursive create directories
