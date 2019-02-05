@@ -1,11 +1,11 @@
+Robust operating system directory functionality
+
 [![hire me](https://ackerapple.github.io/resume/assets/images/hire-me-badge.svg)](https://ackerapple.github.io/resume/)
 [![npm downloads](https://img.shields.io/npm/dm/ack-path.svg)](https://npmjs.org/ack-path)
 [![Dependency Status](https://david-dm.org/ackerapple/ack-path.svg)](https://david-dm.org/ackerapple/ack-path)
 [![Build Status](https://secure.travis-ci.org/AckerApple/ack-path.svg)](http://travis-ci.org/AckerApple/ack-path)
 [![Build status](https://ci.appveyor.com/api/projects/status/el8bejrmk83nco60?svg=true)](https://ci.appveyor.com/project/AckerApple/ack-path)
 [![NPM version](https://img.shields.io/npm/v/ack-path.svg?style=flat-square)](https://www.npmjs.com/package/ack-path)
-
-Robust operating system directory functionality
 
 <details>
   <summary><strong>Table of Contents</strong></summary>

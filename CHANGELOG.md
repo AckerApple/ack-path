@@ -1,6 +1,9 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.5.17] - 2017-02-05
+- security fixes
+
 ## [1.5.16] - 2017-04-24
 - Added move to cli
 
