@@ -3,12 +3,27 @@ var fs = require('fs'),
   nodePath = require('path'),
   ack = require('ack-x').ack,
   weave = require('./weave'),//contains access to ack.path
-  mime = require('mime')
+  mime = require('mime'),
+  mv = require('mv')//recursive delete directories
 
 var File = function(path){
   this.path = path && path.constructor==File ? path.path : path
   return this
 }
+
+File.prototype.moveTo = function(newPath, overwrite){
+  var NewPath = new File(newPath)
+
+  return ack.promise()
+  .bind(this)
+  .if(()=>overwrite,()=>NewPath.delete())
+  .catch('ENOENT',e=>null)
+  .callback(function(cb){
+    return mv(this.path, NewPath.path, cb)
+    //return fs.rename(this.path,nPath,cb)
+  })
+}
+File.prototype.rename = File.prototype.moveTo
 
 /** returns promise of File object that is targeted at created copy  */
 File.prototype.copyTo = function(pathTo){

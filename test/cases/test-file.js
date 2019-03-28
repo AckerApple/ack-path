@@ -16,6 +16,39 @@ describe('ack.file',function(){
 		TenFileSync = ack.file(tenFilePath).sync()
 	})
 
+	it('#copyTo',function(){
+		var p2 = ack.file(__dirname).join('test2.js')
+		var p = ack.file(__dirname).join('test.js')
+		
+		return p.copyTo( p2 )
+		.then(()=>{
+			const NewFile = ack.path(p2).File().sync()
+			assert.equal(NewFile.exists(), true)
+
+			NewFile.delete()
+			assert.equal(NewFile.exists(), false)
+		})
+	})
+
+	it('#moveTo',function(){
+		var p3 = ack.file(__dirname).join('test3.js')
+		var p2 = ack.file(__dirname).join('test2.js')
+		var p = ack.file(__dirname).join('test.js')
+		
+		return p.copyTo( p2 )
+		.then(()=>p2.moveTo(p3))
+		.then(()=>{
+			const NewFile2 = ack.path(p2).File().sync()
+			assert.equal(NewFile2.exists(), false, "NewFile2 deleted")
+
+			const NewFile3 = ack.path(p3).File().sync()
+			assert.equal(NewFile3.exists(), true, "NewFile3 exists")
+
+			NewFile3.delete()
+			assert.equal(NewFile3.exists(), false, "NewFile3 deleted")
+		})
+	})
+
 	it('#removeExt',function(){
 		var p = ack.file(__dirname).join('test.js').removeExt().path
 		assert.equal(p, path.join(__dirname,'test'))

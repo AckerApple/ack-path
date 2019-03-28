@@ -610,6 +610,12 @@ PathSync.prototype.getSubDirNameArray = function(){
 }
 
 /** overwrites */
+PathSync.prototype.moveTo = function(pathTo){
+  fs.renameSync(this.path, pathTo)
+  return this
+}
+
+/** overwrites */
 PathSync.prototype.copyTo = function(pathTo){
   var WriteTo = new Path(pathTo)
   var writeTo = WriteTo.path//incase is path object

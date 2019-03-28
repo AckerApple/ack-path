@@ -40,9 +40,11 @@ Robust operating system directory functionality
   - [exists()](#syncexists)
   - [delete()](#syncdelete)
   - [copyTo()](#synccopyTo)
+  - [moveTo()](#syncmoveTo)
 - [File Functionality](#file-functionality)
   - [require](#requirefile)
   - [copyTo()](#filecopyto)
+  - [moveTo()](#filemoveto)
   - [delete()](#filedelete)
   - [param()](#param)
   - [getMimeType()](#filegetmimetype)
@@ -248,6 +250,11 @@ PathSync.delete()
 PathSync.copyTo()
 ```
 
+### .sync().moveTo()
+```javascript
+PathSync.copyTo()
+```
+
 
 ## File Functionality
 A more file specific set of objective functionality
@@ -261,6 +268,11 @@ var filePath = File.path
 ### .file().copyTo()
 ```javascript
 File.copyTo(__filename+'.copy').then()
+```
+
+### .file().moveTo()
+```javascript
+File.moveTo(__filename+'.newname').then()
 ```
 
 ### .file().delete()

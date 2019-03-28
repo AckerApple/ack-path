@@ -274,10 +274,13 @@ describe('ack.path',function(){
 		return ack.path(assestsPath).copyTo( copyTo )
 		.then( ()=>ack.path(copyTo).moveTo(moveTo, true) )
 		.then(()=>{
-			const NewPath = ack.path(moveTo).sync()
-			assert.equal(NewPath.exists(), true)
-			NewPath.delete()
-			assert.equal(NewPath.exists(), false)
+			const NewPath2 = ack.path(copyTo).sync()
+			assert.equal(NewPath2.exists(), false)
+
+			const NewPath3 = ack.path(moveTo).sync()
+			assert.equal(NewPath3.exists(), true)
+			NewPath3.delete()
+			assert.equal(NewPath3.exists(), false)
 		})
 	})
 
