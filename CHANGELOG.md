@@ -1,7 +1,7 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
-## [1.5.17] - 2019-03-28
+## [1.5.19] - 2019-03-28
 - security fixes
 - added moveTo
 

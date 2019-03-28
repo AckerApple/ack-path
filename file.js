@@ -168,6 +168,11 @@ var FileSync = function FileSync(path){
   return this
 }
 
+FileSync.prototype.moveTo = function( pathTo ){
+  return fs.renameSync(this.path, pathTo)
+}
+FileSync.prototype.rename = FileSync.prototype.moveTo
+
 FileSync.prototype.read = function(){
   return fs.readFileSync(this.path)
 }
