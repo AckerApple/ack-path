@@ -1,6 +1,9 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.6.0] - 2019-05-08
+- Stopped using custom promise library in favor of native promises
+
 ## [1.5.19] - 2019-03-28
 - security fixes
 - added moveTo

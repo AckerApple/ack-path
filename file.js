@@ -102,7 +102,16 @@ File.prototype.paramDir = function(options){
 }
 
 File.prototype.stat = function(){
-  return ack.promise().set(this.path).callback(fs.stat)
+  const path = this.path
+  return new Promise(function(res,rej){
+    fs.stat(path, function(err, value){
+      if( err ){
+        return rej(err)
+      }
+      res(value)
+    })
+  })
+  //return ack.promise().set(this.path).callback(fs.stat)
 }
 
 File.prototype.getMimeType = function(){

@@ -203,10 +203,20 @@ Path.prototype.getDepth = function(){
 
 /** hard-checks file system if item is a folder */
 Path.isDirectory = function(target){
+  return new Promise(function(res,rej){
+    fs.lstat(target, function(err, value){
+      if( err ){
+        return rej(err)
+      }
+      res( value.isDirectory() )
+    })
+  })
+  /*
   return ack.promise().bind(fs)
   .set(target)
   .callback( fs.lstat )
   .call('isDirectory')
+  */
 }
 
 Path.prototype.isDirectory = function(){
