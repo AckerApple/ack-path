@@ -1,7 +1,6 @@
 "use strict";
 var fs = require('fs')
   ,path = require('path')
-  ,ack = require('ack-x').ack
   ,nodeDir = require('path-reader')//consider replacing with "readdirp"
   ,weave = require('./weave')//contains access to ack.file
   ,mkdirp = require('mkdirp')//recursive create directories
@@ -48,53 +47,94 @@ Path.prototype.copyTo = function(pathTo){
   var writeTo = WriteTo.path//incase is path object
   
   return WriteTo.param()
-  .then(function(){
-    return this.getRecurPathReport()
-  }.bind(this))
-  .then(function(report){
-    return copyToByRecurReport(this.path, writeTo, report)
-  }.bind(this))
+  .then(()=>
+    this.getRecurPathReport()
+  )
+  .then((report)=>
+    copyToByRecurReport(this.path, writeTo, report)
+  )
 }
 
 function copyToByRecurReport(from, writeTo, report){
-  return ack.promise()
-  .map(report.dirs,item=>{
-    var copyTo = path.join(writeTo, item)
-    var copyFrom = path.join(from,item)
-    var NewPath = new Path( path.join(writeTo,item) )
-    return NewPath.param().catch('EEXIST',e=>null)
+  return Promise.resolve( report.dirs )
+  .then(dirs=>{
+    const promises = dirs.map(item=>{
+      var copyTo = path.join(writeTo, item)
+      var copyFrom = path.join(from,item)
+      var NewPath = new Path( path.join(writeTo,item) )
+      return NewPath.param()
+      .catch(e=>{
+        if( isExistsError(e) ){
+          return null
+        }
+      })
+    })
+
+    return Promise.all( promises )
   })
-  .map(report.files, item=>{
-    var copyTo = path.join(writeTo, item)
-    var copyFrom = path.join(from, item)
-    var NewFile = new Path(copyTo).file()
-    return new Path(copyFrom).file().read().then(buff=>NewFile.write(buff))
+  .then(()=>{
+    const promises = report.files.map(item=>{
+      var copyTo = path.join(writeTo, item)
+      var copyFrom = path.join(from, item)
+      var NewFile = new Path(copyTo).file()
+      return new Path(copyFrom).file().read().then(buff=>NewFile.write(buff))
+    })
+
+    return Promise.all( promises )
   })
 }
 
 /** move entire directory or single file */
 Path.prototype.moveTo = function(newPath, overwrite){
   var NewPath = new Path(newPath)
+  let prom = Promise.resolve()
 
-  return ack.promise()
-  .bind(this)
-  .if(()=>overwrite,()=>NewPath.delete())
-  .catch('ENOENT',e=>null)
-  .callback(function(cb){
-    return mv(this.path, NewPath.path, cb)
-    //return fs.rename(this.path,nPath,cb)
-  })
+  if( overwrite ){
+    prom = NewPath.delete().catch(e=>{
+      if( e.code==='ENOENT' ){
+        return null
+      }
+      return Promise.reject( e )
+    })
+  }
+
+  return prom
+  .then(()=>{
+    return new Promise((res,rej)=>{
+      mv(this.path, NewPath.path, (err,value)=>{
+        if( err ){
+          return rej( err )
+        }
+        res( value )
+      })
+    })
+  })  
 }
 
 /** in-place rename directory or single file */
 Path.prototype.rename = function(newname, overwrite){
   var NewPath = this.Join('../', newname)
-  return ack.promise()
-  .bind(this)
-  .if(()=>overwrite,()=>NewPath.delete())
-  .catch('ENOENT',e=>null)
-  .callback(function(cb){
-    return mv(this.path, NewPath.path, cb)
+  let promise = Promise.resolve()
+
+  if( overwrite ){
+    promise = NewPath.delete().catch(function(e){
+      if( e.code==='ENOENT' ){
+        return null
+      }
+      return Promise.reject( e )
+    })
+  }
+
+  return promise
+  .then((cb)=>{
+    return new Promise((res,rej)=>{
+      mv(this.path, NewPath.path, (err,value)=>{
+        if( err ){
+          return rej( err )
+        }
+        res( value )
+      })
+    })
     //return fs.rename(this.path,NewPath.path,cb)
   })
 }
@@ -211,12 +251,6 @@ Path.isDirectory = function(target){
       res( value.isDirectory() )
     })
   })
-  /*
-  return ack.promise().bind(fs)
-  .set(target)
-  .callback( fs.lstat )
-  .call('isDirectory')
-  */
 }
 
 Path.prototype.isDirectory = function(){
@@ -225,10 +259,14 @@ Path.prototype.isDirectory = function(){
 
 /** hard-checks file system if item is a file */
 Path.prototype.isFile = function(){
-  return ack.promise().bind(fs)
-  .set(this.path)
-  .callback( fs.lstat )
-  .call('isFile')
+  return new Promise((res,rej)=>{
+    fs.lstat(this.path,(err,value)=>{
+      if( err ){
+        return rej( err )
+      }
+      res( value.isFile() )
+    })
+  })
 }
 
 Path.isLikeFile = function(targetPath){
@@ -245,8 +283,15 @@ Path.prototype.exists = function(cbOrPath,cb){
     ,p = isArg1String ? this.String().join(cbOrPath) : this.path
     ,t=this
 
-  return ack.promise().set(p)
-  .next(fs.exists)//.next(fs.stat).set(true).catch(function(){return false})
+  return new Promise((res,rej)=>{
+    fs.stat(p,(err,value)=>{
+      if( err ){
+        return res( false )
+      }
+
+      res( true )
+    })
+  })
 }
 
 Path.prototype.ifExists = function(pathOrCb,cbOrElse,els){
@@ -257,23 +302,34 @@ Path.prototype.ifExists = function(pathOrCb,cbOrElse,els){
 
   els = isSubPath ? els||emp : cbOrElse||emp
 
-  this.exists().if(true,cb,this).if(false,els,this)
+  this.exists()
+  .then(res=>{
+    if( res ){
+      return cb.call(this)
+    }
+    els.call(this)
+  })
 
   return this
 }
 
+//not recommended. Require within promise
 Path.prototype.require = function(file){
   var filePath = file? path.join(this.path,file) : this.path
-  return ack.promise().then(function(){
+  return Promise.resolve().then(function(){
     return require(filePath)
   })
 }
 
 /** creates folder if not defined. Does not consider if defined path is actually a file path */
 Path.param = function(folderPath,options){
-  return ack.promise()
-  .callback(function(callback){
-    mkdirp(folderPath,options,callback)
+  return new Promise((res,rej)=>{
+    mkdirp(folderPath,options,(err,value)=>{
+      if( err ){
+        return err
+      }
+      res( value )
+    })
   })
 }
 
@@ -287,29 +343,36 @@ Path.prototype.paramDir = function(subPath,options){
     var tarPath = path.join(tarPath,'../')
   }
 
-  return Path.param(tarPath, options).bind(this)
+  return Path.param(tarPath, options)
 }
 
 /** creates folder if not defined. Does not consider if defined path is actually a file path */
 Path.prototype.param = function(subPath,options){
   var tarPath = subPath ? path.join(this.path,subPath) : this.path
-  return Path.param(tarPath, options).bind(this)
+  return Path.param(tarPath, options)
 }
 
 Path.delete = function(target){
   return Path.isDirectory(target)
   .then(isDir=>{
     if(isDir){
-      return ack.promise()
-      .callback(function(callback){
-        rimraf(target,callback)
+      return new Promise((res,rej)=>{
+        rimraf(target,(err,value)=>{
+          if( err ){
+            return rej(err)
+          }
+          res( value )
+        })
       })
     }
 
-    return ack.promise()
-    .set(target)
-    .callback(function(path,callback){
-      fs.unlink(path,callback)
+    return new Promise((res,rej)=>{
+      fs.unlink(path,(err,value)=>{
+        if( err ){
+          return rej(err)
+        }
+        res( value )
+      })
     })
   })
 }
@@ -347,7 +410,13 @@ Path.prototype.getSubDirArray = function(){
 
 /** returns names of subdirectories */
 Path.prototype.getSubDirNameArray = function(){
-  return ack.promise().then(()=>nodeDir.promiseFiles(this.path, 'dir', {recursive:false, shortName:true}))
+  return Promise.resolve().then(()=>
+    nodeDir.promiseFiles(
+      this.path,
+      'dir',
+      {recursive:false, shortName:true}
+    )
+  )
 }
 
 /** 
@@ -370,7 +439,7 @@ Path.prototype.recur = function(callbackOrParentValue, callbackOrOptions, option
     array.forEach(v=>{
       promises.push( eachDir(this.Join(v)) )
     })
-    return ack.promise().all(promises)
+    return Promise.all(promises)
   })
 }
 
@@ -390,10 +459,17 @@ Path.prototype.nextSubDir = function(each){
   var $this=this
   return this.getSubDirArray()
   .then(function(array){
-    var promise = ack.promise()
+    let promise = Promise.resolve()
     array.forEach(function(v,i){
-      promise.next(function(next){
-        each.call($this,v,i,next)
+      promise = promise.then(()=>{
+        return new Promise((res,rej)=>{
+          each.call($this,v,i,function(err,value){
+            if( err ){
+              return rej(err)
+            }
+            res(value)
+          })
+        })
       })
     })
     return promise
@@ -464,10 +540,7 @@ Path.prototype.each = function(eachCall, options){
 
   options.shortName = options.shortName==null ? false : options.shortName
 
-  var promise = ack.promise()
-  //.set(this.path, filter, opsNum)
-  //.bind(readDir)
-  //.callback(readDir.read,'')
+  var promise = Promise.resolve()
   .then(()=>nodeDir.promiseFiles(this.path, searchType, options))
   .then(results=>{
     if(results.constructor==Array){
@@ -483,7 +556,6 @@ Path.prototype.each = function(eachCall, options){
 
     return results.files.map(item=>item.substring(this.path.length+path.sep.length,item.length))
   })
-  .bind(this)
   
   //support deprecated method of filtering
   if(options.filter){
@@ -517,16 +589,17 @@ Path.prototype.each = function(eachCall, options){
   }
   
   var rtn = []
-  promise = promise.each(function(v,i){
-    var callres = eachCall.call(this,v,i)
+  return promise.then(results=>{
+    const mapped = results.map(function(v,i){
+      var callres = eachCall.call(this,v,i)
 
-    if(callres!==false){
-      rtn.push(callres)
-    }
+      if(callres!==false){
+        rtn.push(callres)
+      }
+    })
+
+    return Promise.all( rtn )
   })
-  .then(()=>Promise.all(rtn))
-
-  return promise
 }
 
 /** promise */
@@ -633,7 +706,7 @@ PathSync.prototype.copyTo = function(pathTo){
   try{
     fs.mkdirSync(writeTo)
   }catch(e){
-    if(!e.code || e.code!='EEXIST'){
+    if( isExistsError(e) ){
       throw e
     }
   }
@@ -652,7 +725,7 @@ PathSync.prototype.copyTo = function(pathTo){
       try{
         fs.mkdirSync( newPath )
       }catch(e){
-        if( e.code!='EEXIST' ){
+        if( isExistsError( e ) ){
           throw e
         }
       }
@@ -923,14 +996,13 @@ SearchUpPath.prototype.go = function(){
 
   var resultStatus = {isFirstFind:true, isIndex:false}
 
-  return ack.promise()
-  .callback(function(callback){
+  return new Promise((res,rej)=>{
     var nextProcessor = function(Path, next){
       var isFile = Path.isFile() || Path.noLastSlash().isFile()
       if(isFile){
         Path.ifExists(function(){
-          callback(null, Path.path, resultStatus)
-          //success(Path.path)//deprecated in favor of promises
+          res( Path.path )
+          //callback(null, Path.path, resultStatus)
         },function(p){
           if(roll){
             roll.up()//rollup path
@@ -949,7 +1021,8 @@ SearchUpPath.prototype.go = function(){
           if(isRollLeft){
             next()
           }else{
-            callback(null, null, resultStatus)//could not be found
+            res( null )
+            //callback(null, null, resultStatus)//could not be found
             //fail()
           }
         }
@@ -964,12 +1037,12 @@ SearchUpPath.prototype.go = function(){
             }
 
             Path.ifExists(function(){
-              callback(null, Path.path, resultStatus)
-              //success(Path.path)
+              res( Path.path )
+              //callback(null, Path.path, resultStatus)
             },failUp)
           }else{
-            callback(null, null, resultStatus)//could not be found
-            //fail()
+            res( null )
+            //callback(null, null, resultStatus)//could not be found
           }
         }
 
@@ -980,8 +1053,8 @@ SearchUpPath.prototype.go = function(){
 
           Path.join(ifn).ifExists(function(){
             resultStatus.isIndex = true
-            callback(null, Path.path, resultStatus)
-            //success(Path.path)
+            res( Path.path )
+            //callback(null, Path.path, resultStatus)
           },function(){
             resultStatus.isFirstFind = false//we have to seach elsewhere so it is not the first find
 
@@ -1005,3 +1078,7 @@ SearchUpPath.prototype.go = function(){
 }
 
 module.exports = function(path){return new Path(path)}
+
+module.exports.isExistsError = function isExistsError( e ){
+  return !e.code || e.code!='EEXIST'
+}

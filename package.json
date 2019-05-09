@@ -1,6 +1,6 @@
 {
   "name": "ack-path",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Robust operating system directory functionality",
   "main": "index.js",
   "scripts": {
@@ -28,8 +28,6 @@
   },
   "homepage": "https://github.com/AckerApple/ack-path#readme",
   "dependencies": {
-    "ack-p": "^1.0.14",
-    "ack-x": "^1.5.5",
     "mime": "^2.4.0",
     "mkdirp": "^0.5.1",
     "mv": "^2.1.1",

@@ -1,7 +1,7 @@
 "use strict";
+const isExistsError = require('./index').isExistsError
 var fs = require('fs'),
   nodePath = require('path'),
-  ack = require('ack-x').ack,
   weave = require('./weave'),//contains access to ack.path
   mime = require('mime'),
   mv = require('mv')//recursive delete directories
@@ -13,13 +13,26 @@ var File = function(path){
 
 File.prototype.moveTo = function(newPath, overwrite){
   var NewPath = new File(newPath)
+  let promise = Promise.resolve()
 
-  return ack.promise()
-  .bind(this)
-  .if(()=>overwrite,()=>NewPath.delete())
-  .catch('ENOENT',e=>null)
-  .callback(function(cb){
-    return mv(this.path, NewPath.path, cb)
+  if( overwrite ){
+    promise = NewPath.delete()
+    .catch(e=>{
+      if( isExistsError(e) ){
+        return null
+      }
+      return Promise.reject( e )
+    })
+  }
+  return promise.then(()=>{
+    return new Promise((res,rej)=>{
+      mv(this.path, NewPath.path, (err,value)=>{
+        if( err ){
+          return rej(err)
+        }
+        res( value )
+      })
+    })
     //return fs.rename(this.path,nPath,cb)
   })
 }
@@ -35,7 +48,7 @@ File.prototype.copyTo = function(pathTo){
   .then(function(){
     return copyFile(from, writeTo)
   })
-  .set(WriteTo)
+  .then(()=>WriteTo)
 }
 
 /** Manipulates path by removing one file extension. Returns self */
@@ -61,19 +74,11 @@ File.prototype.join = function(a,b,c){
 File.prototype.requireIfExists = function(){
   var path = this.path
 
-  return ack.promise()
-  .next(function(next){
-    this.ifExists(function(){
-      next(require(path))
-    },function(){
-      next()
-      /*
-      var e = new Error()
-      e.name = 'FileNotFound'
-      next.promise.throw(e)
-      */
-    })
-  },this)
+  return this.ifExists().then(res=>{
+    if( res ){
+      return require(path)
+    }
+  })
 }
 
 File.prototype.readJson = function(){
@@ -85,11 +90,16 @@ File.prototype.ifExists = function(cb,els){
   els = els||function(){}
   cb = cb||function(){}
 
-  this.exists()
-  .if(true,cb,this)
-  .if(false,els,this)
-
-  return this
+  return this.exists()
+  .then(res=>{
+    if( res ){
+      cb()
+      return res
+    }
+    
+    els()
+    return res
+  })
 }
 
 File.prototype.Path = function(){
@@ -98,7 +108,7 @@ File.prototype.Path = function(){
 
 //recursively creates paths
 File.prototype.paramDir = function(options){
-  return this.Path().paramDir().set(this)
+  return this.Path().paramDir().then(()=>this)
 }
 
 File.prototype.stat = function(){
@@ -111,7 +121,6 @@ File.prototype.stat = function(){
       res(value)
     })
   })
-  //return ack.promise().set(this.path).callback(fs.stat)
 }
 
 File.prototype.getMimeType = function(){
@@ -119,7 +128,14 @@ File.prototype.getMimeType = function(){
 }
 
 File.prototype.read = function(){
-  return ack.promise().set(this.path).callback(fs.readFile)
+  return new Promise((res,rej)=>{
+    fs.readFile(this.path,(err,value)=>{
+      if( err ){
+        return rej( err )
+      }
+      res( value )
+    })
+  })
 }
 
 File.prototype.readAsBase64 = function(){
@@ -127,7 +143,7 @@ File.prototype.readAsBase64 = function(){
 }
 
 File.prototype.readAsString = function(){
-  return this.read().call('toString')
+  return this.read().then(res=>res.toString())
 }
 
 File.prototype.getName = function(){
@@ -135,32 +151,68 @@ File.prototype.getName = function(){
 }
 
 File.prototype.append = function(output){
-  return ack.promise().set(this.path, output).callback(fs.appendFile)
-}
-
-File.prototype.write = function(output){
-  return ack.promise().set(this.path,output).callback(fs.writeFile)//.then(function(){return this},this)
-}
-
-/** just like write but if file already exists, no error will be thrown */
-File.prototype.param = function(output){
-  return ack.promise()
-  .set(this.path,output)
-  .callback(fs.writeFile)//.then(function(){return this},this)
-  .catch('ENOENT',function(){})
-}
-
-File.prototype.delete = function(){
-  return ack.promise().set(this.path).callback(function(r, callback){
-    ack.promise().set(r).callback(fs.unlink).then(callback)
-    .catch('ENOENT',function(){//file did not exists, no big deal
-      callback()
+  return new Promise((res,rej)=>{
+    fs.appendFile(this.path, output, (err,value)=>{
+      if( err ){
+        return rej(err)
+      }
+      res( value )
     })
   })
 }
 
+File.prototype.write = function(output){
+  return new Promise((res,rej)=>{
+    fs.writeFile(this.path,output,(err,value)=>{
+      if( err ){
+        return rej( err )
+      }
+      res( value )
+    })
+  })
+}
+
+/** just like write but if file already exists, no error will be thrown */
+File.prototype.param = function(output){
+  return new Promise((res,rej)=>{
+    fs.writeFile(this.path,output,(err,value)=>{
+      if( err ){
+        return rej(err)
+      }
+      res( value )
+    })
+  })
+  .catch(e=>{
+    if( isExistsError(e) ){
+      return null
+    }
+    return Promise.reject(e)
+  })
+}
+
+File.prototype.delete = function(){
+  return new Promise((res,rej)=>{
+    fs.unlink(this.path,(err,value)=>{
+      if( err ){
+        return rej( err )
+      }
+      res( value )
+    })
+  })
+  .catch(e=>{
+    if( isExistsError(e) ){
+      return null
+    }
+    return Promise.reject(e)
+  })
+}
+
 File.prototype.exists = function(cb){
-  return ack.promise().set(this.path).next(fs.exists)
+  return new Promise((res,rej)=>{
+    fs.lstat(this.path,(err,value)=>{
+      res( err ? false : true )
+    })
+  })
 }
 
 File.prototype.sync = function(){

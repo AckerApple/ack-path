@@ -34,9 +34,12 @@ describe('ack.path',function(){
 		assert.equal(ack.path('/test/file').removeExt().path, '/test/file')
 	})
 
-	it('#removeFile',function(){
+	it('#removeFile, #removeFileName',function(){
 		assert.equal(ack.path('/test/file.js').removeFile().path, '/test/')
 		assert.equal(ack.path('/test/').removeFile().path, '/test/')
+
+		assert.equal(ack.path('/test/file.js').removeFileName().path, '/test/')
+		assert.equal(ack.path('/test/').removeFileName().path, '/test/')
 	})
 
 	describe('#each',function(){
@@ -188,8 +191,8 @@ describe('ack.path',function(){
 		afterEach(done=>{
 			var Path = ack.path(assestsPath).join('paramPathTest0')
 			
-			Path.param().bind(Path)
-			.then( Path.delete )
+			Path.param()
+			.then( ()=>Path.delete() )
 			.then(function(){
 				assert.equal(Path.sync().exists(),false,'test path was not succesfully deleted')
 			})
@@ -221,24 +224,24 @@ describe('ack.path',function(){
 			it('target-folder',function(done){
 				var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2')
 				
-				Path.paramDir().bind(Path)
-				.then(function(){
+				Path.paramDir()
+				.then(()=>{
 					assert.equal(Path.sync().dirExists(),true,'path was not succesfully created')
 					assert.equal(Path.sync().exists(),true)
 				})
-				.then( Path.deleteDir )
+				.then( ()=>Path.deleteDir() )
 				.then(done).catch(done)
 			})
 
 			it('target-file-folder',function(done){
 				var Path = ack.path(assestsPath).join('paramPathTest0','paramPathTest1','paramPathTest2','acker.js')
 				
-				Path.paramDir().bind(Path)
-				.then(function(){
+				Path.paramDir()
+				.then(()=>{
 					assert.equal(Path.sync().dirExists(),true,'path was not succesfully created')
 					assert.equal(Path.sync().exists(),false,'file/folder was created when it should have not')
 				})
-				.then( Path.deleteDir )
+				.then(()=>Path.deleteDir())
 				.then(done).catch(done)
 			})
 		})

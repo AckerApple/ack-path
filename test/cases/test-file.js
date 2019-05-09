@@ -88,21 +88,22 @@ describe('ack.file',function(){
 
 	it('#paramDir',function(done){
 		TenFile.paramDir()
-		.set(1234567890)
-		.then(TenFile.write,TenFile)
-		.then(TenFile.exists,TenFile)
-		.if(false,function(){
-			done(new Error('Ten File Did Not get created'))
+		.then(()=>TenFile.write(1234567890))
+		.then(()=>TenFile.exists())
+		.then(res=>{		
+			if( !res ){
+				throw new Error('Ten File Did Not get created')
+			}
+
+			return TenFile.read()
 		})
-		.ifNext(true,function(next){
-			TenFile.read().then(function(read){
-				if(read.length!=10)throw new Error('expected written file length 10. Got '+read.length)
-			})
-			.then(TenFile.delete,TenFile)
-			.then(next)
-			.catch(next.throw)
+		.then(function(read){
+			if(read.length!=10){
+				throw new Error('expected written file length 10. Got '+read.length)
+			}
 		})
-		.set().then(done).catch(done)
+		.then(()=>TenFile.delete())
+		.then(done).catch(done)
 	})
 
 	it('#getJson',function(done){
@@ -142,9 +143,7 @@ describe('ack.file',function(){
 
 	it('#write#delete',function(done){
 		TenFile.write('1234567890')
-		.next(function(next){
-			TenFile.delete().then(next)
-		})
+		.then(()=>TenFile.delete())
 		.then(function(){
 			assert.equal(TenFileSync.exists(),false,'path was not succesfully deleted')
 		})
