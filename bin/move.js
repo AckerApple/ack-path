@@ -13,7 +13,12 @@ const toPath = path.join(process.cwd(), process.argv[4])
 const aPath = ackPath(fromPath)
 
 aPath.isFile()
-.if(true, ()=>aPath.File().moveTo(toPath))
-.if(false, ()=>aPath.moveTo(toPath))
+.then(result=>{
+  if( result ){
+    return aPath.File().moveTo(toPath)
+  }
+
+  return aPath.moveTo(toPath)
+})
 .then( ()=>log('moved', process.argv[3], 'to', process.argv[4]) )
 .catch( e=>log.error(e) )
