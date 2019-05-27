@@ -1,222 +1,228 @@
-"use strict";
-const isExistsError = require('./index').isExistsError
-
 import * as fs from 'fs'
 import * as nodePath from 'path'
 import { weave } from './weave'//contains access to ack.path
 import * as mime from 'mime'
 import * as mv from 'mv'//recursive delete directories
 
-var File = function(path){
-  this.path = path && path.constructor==File ? path.path : path
-}
+import { isExistsError } from './index'
 
-File.prototype.moveTo = function(newPath, overwrite){
-  var NewPath = new File(newPath)
-  let promise = Promise.resolve()
+export class File{
+  path:string
 
-  if( overwrite ){
-    promise = NewPath.delete()
-    .catch(e=>{
-      if( isExistsError(e) ){
-        return null
-      }
-      return Promise.reject( e )
+  constructor(path){
+    this.path = path && path.constructor==File ? path.path : path
+  }
+
+  moveTo(newPath, overwrite){
+    var NewPath = new File(newPath)
+    let promise:Promise<any> = Promise.resolve()
+
+    if( overwrite ){
+      promise = NewPath.delete()
+      .catch(e=>{
+        if( isExistsError(e) ){
+          return null
+        }
+        return Promise.reject( e )
+      })
+    }
+    return promise.then(()=>{
+      return new Promise((res,rej)=>{
+        mv(this.path, NewPath.path, (err,value)=>{
+          if( err ){
+            return rej(err)
+          }
+          res( value )
+        })
+      })
+      //return fs.rename(this.path,nPath,cb)
     })
   }
-  return promise.then(()=>{
-    return new Promise((res,rej)=>{
-      mv(this.path, NewPath.path, (err,value)=>{
+  
+  rename = this.moveTo
+
+  /** returns promise of File object that is targeted at created copy  */
+  copyTo(pathTo){
+    var WriteTo = new File(pathTo)
+    var writeTo = WriteTo.path//incase is path object
+    var from = this.path
+
+    return weave.path(writeTo).join('../').param()
+    .then(function(){
+      return copyFile(from, writeTo)
+    })
+    .then(()=>WriteTo)
+  }
+
+  /** Manipulates path by removing one file extension. Returns self */
+  removeExt(){
+    this.path = this.path.replace(/\.[^.\/]+$/,'');return this
+  }
+
+  /** Creates new File instance with existing file path prepended. Leaves existing reference alone */
+  Join(a,b,c){
+    var args = Array.prototype.slice.call(arguments)
+    args.unshift(this.path)
+    return new File( nodePath.join.apply(nodePath, args) )
+  }
+
+  /** appends onto existing file path */
+  join(a,b,c){
+    var args = Array.prototype.slice.call(arguments)
+    args.unshift(this.path)
+    this.path = nodePath.join.apply(nodePath, args);return this
+  }
+
+  //callback(error,result)
+  requireIfExists(){
+    var path = this.path
+
+    return this.ifExists().then(res=>{
+      if( res ){
+        return require(path)
+      }
+    })
+  }
+
+  readJson(){
+    return this.readAsString().then(JSON.parse)
+  }
+  getJson = this.readJson//aka
+
+  ifExists(cb?,els?){
+    els = els||function(){}
+    cb = cb||function(){}
+
+    return this.exists()
+    .then(res=>{
+      if( res ){
+        cb()
+        return res
+      }
+      
+      els()
+      return res
+    })
+  }
+
+  Path(){
+    return weave.path(this.path).join('../')
+  }
+
+  //recursively creates paths
+  paramDir(){
+    return this.Path().paramDir().then(()=>this)
+  }
+
+  stat(){
+    const path = this.path
+    return new Promise(function(res,rej){
+      fs.stat(path, function(err, value){
         if( err ){
           return rej(err)
+        }
+        res(value)
+      })
+    })
+  }
+
+  getMimeType(){
+    return mime.getType(this.path)
+  }
+
+  read(){
+    return new Promise((res,rej)=>{
+      fs.readFile(this.path,(err,value)=>{
+        if( err ){
+          return rej( err )
         }
         res( value )
       })
     })
-    //return fs.rename(this.path,nPath,cb)
-  })
-}
-File.prototype.rename = File.prototype.moveTo
+  }
 
-/** returns promise of File object that is targeted at created copy  */
-File.prototype.copyTo = function(pathTo){
-  var WriteTo = new File(pathTo)
-  var writeTo = WriteTo.path//incase is path object
-  var from = this.path
+  readAsBase64(){
+    return this.read().then(buffer=>buffer.toString())
+    //return this.read().then(buffer=>buffer.toString('base64'))
+  }
 
-  return weave.path(writeTo).join('../').param()
-  .then(function(){
-    return copyFile(from, writeTo)
-  })
-  .then(()=>WriteTo)
-}
+  readAsString(){
+    return this.read().then(res=>res.toString())
+  }
 
-/** Manipulates path by removing one file extension. Returns self */
-File.prototype.removeExt = function(){
-  this.path = this.path.replace(/\.[^.\/]+$/,'');return this
-}
+  getName(){
+    return this.path.replace(/^.+[\\/]+/g,'')
+  }
 
-/** Creates new File instance with existing file path prepended. Leaves existing reference alone */
-File.prototype.Join = function(a,b,c){
-  var args = Array.prototype.slice.call(arguments)
-  args.unshift(this.path)
-  return new File( nodePath.join.apply(nodePath, args) )
-}
+  append(output){
+    return new Promise((res,rej)=>{
+      fs.appendFile(this.path, output, (err)=>{
+        if( err ){
+          return rej(err)
+        }
+        res()
+      })
+    })
+  }
 
-/** appends onto existing file path */
-File.prototype.join = function(a,b,c){
-  var args = Array.prototype.slice.call(arguments)
-  args.unshift(this.path)
-  this.path = nodePath.join.apply(nodePath, args);return this
-}
+  write(output){
+    return new Promise((res,rej)=>{
+      fs.writeFile(this.path,output,(err:Error)=>{
+        if( err ){
+          return rej( err )
+        }
+        res()
+      })
+    })
+  }
 
-//callback(error,result)
-File.prototype.requireIfExists = function(){
-  var path = this.path
-
-  return this.ifExists().then(res=>{
-    if( res ){
-      return require(path)
-    }
-  })
-}
-
-File.prototype.readJson = function(){
-  return this.readAsString().then(JSON.parse)
-}
-File.prototype.getJson = File.prototype.readJson//aka
-
-File.prototype.ifExists = function(cb,els){
-  els = els||function(){}
-  cb = cb||function(){}
-
-  return this.exists()
-  .then(res=>{
-    if( res ){
-      cb()
-      return res
-    }
-    
-    els()
-    return res
-  })
-}
-
-File.prototype.Path = function(){
-  return weave.path(this.path).join('../')
-}
-
-//recursively creates paths
-File.prototype.paramDir = function(options){
-  return this.Path().paramDir().then(()=>this)
-}
-
-File.prototype.stat = function(){
-  const path = this.path
-  return new Promise(function(res,rej){
-    fs.stat(path, function(err, value){
-      if( err ){
-        return rej(err)
+  /** just like write but if file already exists, no error will be thrown */
+  param(output){
+    return new Promise((res,rej)=>{
+      fs.writeFile(this.path,output,(err)=>{
+        if( err ){
+          return rej(err)
+        }
+        res()
+      })
+    })
+    .catch(e=>{
+      if( isExistsError(e) ){
+        return null
       }
-      res(value)
+      return Promise.reject(e)
     })
-  })
-}
+  }
 
-File.prototype.getMimeType = function(){
-  return mime.getType(this.path)
-}
-
-File.prototype.read = function(){
-  return new Promise((res,rej)=>{
-    fs.readFile(this.path,(err,value)=>{
-      if( err ){
-        return rej( err )
+  delete(){
+    return new Promise((res,rej)=>{
+      fs.unlink(this.path,(err:Error)=>{
+        if( err ){
+          return rej( err )
+        }
+        res()
+      })
+    })
+    .catch(e=>{
+      if( isExistsError(e) ){
+        return null
       }
-      res( value )
+      return Promise.reject(e)
     })
-  })
-}
+  }
 
-File.prototype.readAsBase64 = function(){
-  return this.read(this.path).then(buffer=>buffer.toString('base64'))
-}
-
-File.prototype.readAsString = function(){
-  return this.read().then(res=>res.toString())
-}
-
-File.prototype.getName = function(){
-  return this.path.replace(/^.+[\\/]+/g,'')
-}
-
-File.prototype.append = function(output){
-  return new Promise((res,rej)=>{
-    fs.appendFile(this.path, output, (err)=>{
-      if( err ){
-        return rej(err)
-      }
-      res()
+  exists(){
+    return new Promise((res,rej)=>{
+      fs.lstat(this.path,(err,value)=>{
+        res( err ? false : true )
+      })
     })
-  })
-}
+  }
 
-File.prototype.write = function(output){
-  return new Promise((res,rej)=>{
-    fs.writeFile(this.path,output,(err:Error)=>{
-      if( err ){
-        return rej( err )
-      }
-      res()
-    })
-  })
-}
+  sync(){
+    return new FileSync(this.path)
+  }
 
-/** just like write but if file already exists, no error will be thrown */
-File.prototype.param = function(output){
-  return new Promise((res,rej)=>{
-    fs.writeFile(this.path,output,(err)=>{
-      if( err ){
-        return rej(err)
-      }
-      res()
-    })
-  })
-  .catch(e=>{
-    if( isExistsError(e) ){
-      return null
-    }
-    return Promise.reject(e)
-  })
-}
-
-File.prototype.delete = function(){
-  return new Promise((res,rej)=>{
-    fs.unlink(this.path,(err:Error)=>{
-      if( err ){
-        return rej( err )
-      }
-      res()
-    })
-  })
-  .catch(e=>{
-    if( isExistsError(e) ){
-      return null
-    }
-    return Promise.reject(e)
-  })
-}
-
-File.prototype.exists = function(cb){
-  return new Promise((res,rej)=>{
-    fs.lstat(this.path,(err,value)=>{
-      res( err ? false : true )
-    })
-  })
-}
-
-File.prototype.sync = function(){
-  return new FileSync(this.path)
 }
 
 
@@ -224,38 +230,42 @@ File.prototype.sync = function(){
 
 
 //synchron
-var FileSync = function FileSync(path){
-  this.path = path
-}
+export class FileSync{
+  path:string
 
-FileSync.prototype.moveTo = function( pathTo ){
-  return fs.renameSync(this.path, pathTo)
-}
-FileSync.prototype.rename = FileSync.prototype.moveTo
+  constructor(path){
+    this.path = path
+  }
 
-FileSync.prototype.read = function(){
-  return fs.readFileSync(this.path)
-}
+  moveTo( pathTo ){
+    return fs.renameSync(this.path, pathTo)
+  }
+  rename = this.moveTo
 
-FileSync.prototype.write = function(string,options){
-  fs.writeFileSync(this.path, string, options);return this
-}
+  read():Buffer{
+    return fs.readFileSync(this.path)
+  }
 
-FileSync.prototype.delete = function(){
-  fs.unlinkSync(this.path);return this
-}
+  write(string,options){
+    fs.writeFileSync(this.path, string, options);return this
+  }
 
-FileSync.prototype.exists = function(){
-  return fs.existsSync(this.path)
-}
+  delete(){
+    fs.unlinkSync(this.path);return this
+  }
 
-FileSync.prototype.readJson = function(){
-  var contents = this.read()
-  return JSON.parse(contents)
-}
+  exists(){
+    return fs.existsSync(this.path)
+  }
 
-FileSync.prototype.readAsString = function(){
-  return this.read().toString()
+  readJson(){
+    var contents = this.readAsString()
+    return JSON.parse( contents )
+  }
+
+  readAsString(){
+    return this.read().toString()
+  }
 }
 
 export const method = function(path){return new File(path)}

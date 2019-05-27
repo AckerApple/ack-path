@@ -10,15 +10,15 @@ export declare class Path {
     moveTo(newPath: any, overwrite: any): Promise<{}>;
     /** in-place rename directory or single file */
     rename(newname: any, overwrite: any): Promise<{}>;
-    writeFile(output: any): any;
+    writeFile(output: any): Promise<{}>;
     /** performs .join but original object remains untouched */
     Join(...args: any[]): Path;
-    file(name?: string): any;
+    file(name?: string): import("./file").File;
     sync(): any;
     getLastName(): any;
     getName: () => any;
     Path: any;
-    File: (name?: string) => any;
+    File: (name?: string) => import("./file").File;
     noLastSlash(): this;
     noFirstSlash(): this;
     up(): this;
@@ -40,7 +40,7 @@ export declare class Path {
     /** creates folder if not defined. Takes into consideration if defined path is actually a file path
       Returns promise with context of this Path
     */
-    paramDir(subPath: any, options: any): Promise<{}>;
+    paramDir(subPath?: any, options?: any): Promise<{}>;
     /** creates folder if not defined. Does not consider if defined path is actually a file path */
     param(subPath?: any, options?: any): Promise<{}>;
     delete(subPath?: string): Promise<any>;
@@ -97,4 +97,4 @@ export declare class Path {
     static getFilterByReadOps(options: any): any;
 }
 export declare const method: (path: any) => Path;
-export declare const isExistsError: (e: any) => boolean;
+export declare function isExistsError(e: any): boolean;

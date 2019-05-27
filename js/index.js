@@ -583,7 +583,7 @@ PathSync.prototype.copyTo = function (pathTo) {
         fs.mkdirSync(writeTo);
     }
     catch (e) {
-        if (exports.isExistsError(e)) {
+        if (isExistsError(e)) {
             throw e;
         }
     }
@@ -600,7 +600,7 @@ PathSync.prototype.copyTo = function (pathTo) {
                 fs.mkdirSync(newPath);
             }
             catch (e) {
-                if (exports.isExistsError(e)) {
+                if (isExistsError(e)) {
                     throw e;
                 }
             }
@@ -879,7 +879,7 @@ function copyToByRecurReport(from, writeTo, report) {
             var copyFrom = path.join(from, item);
             var NewPath = new Path(path.join(writeTo, item));
             return NewPath.param()["catch"](function (e) {
-                if (exports.isExistsError(e)) {
+                if (isExistsError(e)) {
                     return null;
                 }
             });
@@ -897,6 +897,7 @@ function copyToByRecurReport(from, writeTo, report) {
     });
 }
 exports.method = function (path) { return new Path(path); };
-exports.isExistsError = function isExistsError(e) {
+function isExistsError(e) {
     return !e.code || e.code != 'EEXIST';
-};
+}
+exports.isExistsError = isExistsError;

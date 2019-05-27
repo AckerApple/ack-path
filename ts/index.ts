@@ -266,7 +266,7 @@ export class Path{
   /** creates folder if not defined. Takes into consideration if defined path is actually a file path
     Returns promise with context of this Path
   */
-  paramDir(subPath,options){
+  paramDir(subPath?,options?){
     var tarPath = subPath ? path.join(this.path,subPath) : this.path
 
     if(Path.isLikeFile(tarPath)){
@@ -1074,6 +1074,6 @@ function copyToByRecurReport(from, writeTo, report){
 }
 
 export const method = function(path){return new Path(path)}
-export const isExistsError = function isExistsError( e ){
+export function isExistsError( e ){
   return !e.code || e.code!='EEXIST'
 }
