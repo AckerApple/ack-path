@@ -17,7 +17,6 @@ Robust operating system directory functionality
   - [copy](#copy)
   - [move](#move)
 - [Directory Functionality](#directory-functionality)
-  - [require](#require)
   - [join()](#join)
   - [param()](#param)
   - [paramDir()](#paramdir)
@@ -42,7 +41,6 @@ Robust operating system directory functionality
   - [copyTo()](#synccopyTo)
   - [moveTo()](#syncmoveTo)
 - [File Functionality](#file-functionality)
-  - [require](#requirefile)
   - [copyTo()](#filecopyto)
   - [moveTo()](#filemoveto)
   - [delete()](#filedelete)
@@ -222,12 +220,6 @@ require('ack-path')('/test/folder/').getLastName() == 'folder'
 ```
 
 ## SYNC Examples
-
-### .sync().require
-```javascript
-var PathSync = require('ack-path')(__dirname).sync()
-var pathTo = PathSync.path
-```
 
 ### .sync().dirExists()
 considers if path is actually a file

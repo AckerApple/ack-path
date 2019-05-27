@@ -1,6 +1,6 @@
 var assert = require('assert')
 	,path = require('path')
-	,ack = require('../../weave')
+	,ack = require('../../js/weave').weave
 
 describe('ack.path.sync()',function(){
 	var tarDir,assestsPath,mockPath,mockPathArray,mockPathNameArray

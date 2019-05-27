@@ -1,14 +1,16 @@
 {
   "name": "ack-path",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "Robust operating system directory functionality",
-  "main": "index.js",
+  "main": "js/index.js",
+  "types": "js/index.js",
   "scripts": {
     "test": "mocha ./test/cases --recursive",
     "test:watch": "mocha ./test/cases --recursive --watch",
     "test:copy": "npm run test:copy:file && npm run test:copy:folder",
     "test:copy:file": "node ./bin/cli.js copy node_modules/ack-p/package.json node_modules/ack-p/package2.json",
-    "test:copy:folder": "node ./bin/cli.js copy node_modules/ack-p node_modules/ack-p2"
+    "test:copy:folder": "node ./bin/cli.js copy node_modules/ack-p node_modules/ack-p2",
+    "build:js": "tsc ts/** --outDir js --declaration true --lib es6"
   },
   "bin": {
     "ack-path": "./bin/cli.js"
@@ -35,6 +37,8 @@
     "rimraf": "^2.6.3"
   },
   "devDependencies": {
+    "@types/node": "^12.0.2",
+    "typescript": "^3.4.5",
     "mocha": "^5.2.0"
   }
 }

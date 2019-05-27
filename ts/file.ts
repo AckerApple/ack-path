@@ -1,14 +1,14 @@
 "use strict";
 const isExistsError = require('./index').isExistsError
-var fs = require('fs'),
-  nodePath = require('path'),
-  weave = require('./weave'),//contains access to ack.path
-  mime = require('mime'),
-  mv = require('mv')//recursive delete directories
+
+import * as fs from 'fs'
+import * as nodePath from 'path'
+import { weave } from './weave'//contains access to ack.path
+import * as mime from 'mime'
+import * as mv from 'mv'//recursive delete directories
 
 var File = function(path){
   this.path = path && path.constructor==File ? path.path : path
-  return this
 }
 
 File.prototype.moveTo = function(newPath, overwrite){
@@ -152,22 +152,22 @@ File.prototype.getName = function(){
 
 File.prototype.append = function(output){
   return new Promise((res,rej)=>{
-    fs.appendFile(this.path, output, (err,value)=>{
+    fs.appendFile(this.path, output, (err)=>{
       if( err ){
         return rej(err)
       }
-      res( value )
+      res()
     })
   })
 }
 
 File.prototype.write = function(output){
   return new Promise((res,rej)=>{
-    fs.writeFile(this.path,output,(err,value)=>{
+    fs.writeFile(this.path,output,(err:Error)=>{
       if( err ){
         return rej( err )
       }
-      res( value )
+      res()
     })
   })
 }
@@ -175,11 +175,11 @@ File.prototype.write = function(output){
 /** just like write but if file already exists, no error will be thrown */
 File.prototype.param = function(output){
   return new Promise((res,rej)=>{
-    fs.writeFile(this.path,output,(err,value)=>{
+    fs.writeFile(this.path,output,(err)=>{
       if( err ){
         return rej(err)
       }
-      res( value )
+      res()
     })
   })
   .catch(e=>{
@@ -192,11 +192,11 @@ File.prototype.param = function(output){
 
 File.prototype.delete = function(){
   return new Promise((res,rej)=>{
-    fs.unlink(this.path,(err,value)=>{
+    fs.unlink(this.path,(err:Error)=>{
       if( err ){
         return rej( err )
       }
-      res( value )
+      res()
     })
   })
   .catch(e=>{
@@ -226,7 +226,6 @@ File.prototype.sync = function(){
 //synchron
 var FileSync = function FileSync(path){
   this.path = path
-  return this
 }
 
 FileSync.prototype.moveTo = function( pathTo ){
@@ -259,8 +258,8 @@ FileSync.prototype.readAsString = function(){
   return this.read().toString()
 }
 
-module.exports = function(path){return new File(path)}
-module.exports.Class = File
+export const method = function(path){return new File(path)}
+export const Class = File
 
 
 
@@ -269,7 +268,7 @@ module.exports.Class = File
 
 
 
-function copyFile(source, target, cb) {
+function copyFile(source, target) {
   return new Promise(function(res,rej){
     var cbCalled = false;
 

@@ -1,5 +1,5 @@
 "use strict";
-var ack = require('../../weave.js'),
+var ack = require('../../js/weave.js').weave,
 	path = require('path'),
 	assert = require('assert')
 

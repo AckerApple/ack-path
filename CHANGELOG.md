@@ -1,6 +1,9 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.7.0] - 2019-05-
+- built by TypeScript
+
 ## [1.6.1] - 2019-05-08
 - Stopped using custom promise library in favor of native promises
 - Dropped ack-x and ack-p dependencies
