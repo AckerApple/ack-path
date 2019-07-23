@@ -138,11 +138,12 @@ describe('ack.path',function(){
 	})
 
 	it('#nextSubDir',function(done){
-		var ackFound = false
+		let ackFound = false
 		ack.path(tarDir).Join('../')
 		.nextSubDir(function(Path,i,next){
+
 			assert.equal(Path.sync().exists(),true)
-			if(Path.sync().exists('index.js')){
+			if(Path.sync().exists('package.json')){
 				ackFound=true
 			}
 			next()
@@ -157,7 +158,7 @@ describe('ack.path',function(){
 		var ackFound = false
 		ack.path(tarDir).Join('../').eachSubDir(function(Path,i){
 			assert.equal(Path.sync().exists(),true)
-			if(Path.sync().exists('index.js')){
+			if(Path.sync().exists('package.json')){
 				ackFound=true
 			}
 		},function(dirNameArray){

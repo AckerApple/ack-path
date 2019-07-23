@@ -81,20 +81,26 @@ package.json script example
 ```
 
 from command terminal example
-```bash
+```sh
 ./node_modules/bin/ack-path copy ./relativeFrom ./relativeTo
 ```
 
 ### Copy
 
-```bash
+```sh
 ack-path copy ./relativeFrom ./relativeTo
 ```
 
 ### Move
 
-```bash
+```sh
 ack-path move ./relativeFrom ./relativeTo
+```
+
+### Delete
+
+```sh
+ack-path delete ./relativePath
 ```
 
 

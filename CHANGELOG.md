@@ -1,6 +1,11 @@
 # ack-path - Change Log
 All notable changes to this project will be documented here.
 
+## [1.8.0] - 2019-07-23
+- Added default export of ack-path
+- Fixed cli copy and move
+- Added cli delete
+
 ## [1.7.0] - 2019-05-
 - built by TypeScript
 

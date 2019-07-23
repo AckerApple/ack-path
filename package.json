@@ -1,6 +1,6 @@
 {
   "name": "ack-path",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "description": "Robust operating system directory functionality",
   "main": "js/index.js",
   "types": "js/index.js",
@@ -10,7 +10,8 @@
     "test:copy": "npm run test:copy:file && npm run test:copy:folder",
     "test:copy:file": "node ./bin/cli.js copy node_modules/ack-p/package.json node_modules/ack-p/package2.json",
     "test:copy:folder": "node ./bin/cli.js copy node_modules/ack-p node_modules/ack-p2",
-    "build:js": "tsc ts/** --outDir js --declaration true --lib es6"
+    "build:js": "tsc ts/** --outDir js --declaration true --lib es6",
+    "build": "npm run build:js"
   },
   "bin": {
     "ack-path": "./bin/cli.js"

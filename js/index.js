@@ -315,15 +315,16 @@ var Path = /** @class */ (function () {
         });
         return this;
     };
+    /** traverse directories with by providing a high order function */
     Path.prototype.nextSubDir = function (each) {
-        var $this = this;
         return this.getSubDirArray()
             .then(function (array) {
             var promise = Promise.resolve();
             array.forEach(function (v, i) {
+                var _this = this;
                 promise = promise.then(function () {
                     return new Promise(function (res, rej) {
-                        each.call($this, v, i, function (err, value) {
+                        each.call(_this, v, i, function (err, value) {
                             if (err) {
                                 return rej(err);
                             }
@@ -897,6 +898,8 @@ function copyToByRecurReport(from, writeTo, report) {
     });
 }
 exports.method = function (path) { return new Path(path); };
+function default_1(path) { return new Path(path); }
+exports["default"] = default_1;
 function isExistsError(e) {
     return !e.code || e.code != 'EEXIST';
 }

@@ -56,7 +56,8 @@ export declare class Path {
     */
     recur(callbackOrParentValue: any, callbackOrOptions: any, options: any): Promise<any[]>;
     eachSubDir(callback: any, last: any): this;
-    nextSubDir(each: any): Promise<void>;
+    /** traverse directories with by providing a high order function */
+    nextSubDir(each: (Path: any, string: string, next: any) => void): Promise<void>;
     fileSearchUp(fileName: any): any;
     /** Recursively loop folder to fire callback for each file found. see eachPath function */
     recurFiles(eachCall: any, options: any): Promise<any[]>;
@@ -97,4 +98,5 @@ export declare class Path {
     static getFilterByReadOps(options: any): any;
 }
 export declare const method: (path: any) => Path;
+export default function (path: any): Path;
 export declare function isExistsError(e: any): boolean;

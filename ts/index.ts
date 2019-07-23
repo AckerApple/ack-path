@@ -360,15 +360,15 @@ export class Path{
     return this
   }
 
-  nextSubDir(each){
-    var $this=this
+  /** traverse directories with by providing a high order function */
+  nextSubDir( each:(Path:any,string:string,next:any)=>void ){
     return this.getSubDirArray()
-    .then(function(array){
+    .then((array)=>{
       let promise = Promise.resolve()
       array.forEach(function(v,i){
         promise = promise.then(()=>{
           return new Promise((res,rej)=>{
-            each.call($this,v,i,function(err,value){
+            each.call(this,v,i,function(err,value){
               if( err ){
                 return rej(err)
               }
@@ -1074,6 +1074,7 @@ function copyToByRecurReport(from, writeTo, report){
 }
 
 export const method = function(path){return new Path(path)}
+export default function(path){return new Path(path)}
 export function isExistsError( e ){
   return !e.code || e.code!='EEXIST'
 }
